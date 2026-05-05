@@ -115,23 +115,36 @@ public class MusicShareService(
         if (embed == null) return;
 
         var newEmbed = embed.ToEmbedBuilder();
+        var votes = Votes.Values.Where(v => v.MessageId == messageId).ToList();
 
-        var votesForMessage = Votes.Values.Where(v => v.MessageId == messageId).ToList();
-        var loveCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Love);
-        var likeCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Like);
-        var neutralCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Neutral);
-        var dislikeCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Dislike);
-        var trashCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Trash);
-
-        var winningLevel = votesForMessage
-            .GroupBy(v => v.Level)
-            .OrderByDescending(g => g.Count())
-            .FirstOrDefault()?.Key ?? MusicVoteLevel.Neutral;
-
+        var winningLevel = CalculateWinningLevel(votes);
         newEmbed.WithColor(winningLevel.ToColor());
         newEmbed.WithAuthor($"{winningLevel.ToEmoji()} {winningLevel.ToPastTenseDisplayName()}");
-        newEmbed.WithDescription($"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`");
 
+        var loveCount = votes.Count(v => v.Level == MusicVoteLevel.Love);
+        var likeCount = votes.Count(v => v.Level == MusicVoteLevel.Like);
+        var neutralCount = votes.Count(v => v.Level == MusicVoteLevel.Neutral);
+        var dislikeCount = votes.Count(v => v.Level == MusicVoteLevel.Dislike);
+        var trashCount = votes.Count(v => v.Level == MusicVoteLevel.Trash);
+
+        newEmbed.WithDescription(
+            $"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`"
+        );
         await message.ModifyAsync(m => m.Embed = newEmbed.Build());
+    }
+
+    private MusicVoteLevel CalculateWinningLevel(List<VoteHolder> votes)
+    {
+        if (votes.Count == 0) return MusicVoteLevel.Neutral;
+        var averageScore = votes.Average(v => v.Level.ToWeight());
+
+        return averageScore switch
+        {
+            >= 1.5 => MusicVoteLevel.Love,
+            >= 0.5 => MusicVoteLevel.Like,
+            > -0.5 => MusicVoteLevel.Neutral,
+            > -1.5 => MusicVoteLevel.Dislike,
+            _ => MusicVoteLevel.Trash
+        };
     }
 }
