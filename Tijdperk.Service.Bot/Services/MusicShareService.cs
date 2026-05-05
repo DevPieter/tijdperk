@@ -55,8 +55,6 @@ public class MusicShareService(
             .WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`")
             .WithColor(new Color(0x808080));
 
-        songEmbed.WithFooter($"Shared by {user.DisplayName}", user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
-
         var odesli = await odesliService.GetOdesliAsync(songUrl);
         if (odesli is not null)
         {
@@ -90,7 +88,28 @@ public class MusicShareService(
             .WithButton(MusicVoteLevel.Trash.ToButton());
 
         var message = await channel.SendMessageAsync(embed: songEmbed.Build(), components: builder.Build());
+
+        songEmbed.WithFooter($"Shared by {user.DisplayName} / {message.Id}", user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
+        await message.ModifyAsync(m => m.Embed = songEmbed.Build());
+
         SharedSongs[message.Id] = new SharedSongHolder(user.Id, message.Id, songUrl);
+        return true;
+    }
+
+    public async Task<bool> RemoveShareAsync(SocketGuildUser user, ulong messageId)
+    {
+        // TODO - It may be better to use custom IDs instead of relying on the message ID
+        if (!SharedSongs.TryGetValue(messageId, out var song)) return false;
+        if (song.UserId != user.Id) return false;
+
+        if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel) return false;
+        if (await channel.GetMessageAsync(messageId) is not IUserMessage message) return false;
+
+        await message.DeleteAsync();
+        SharedSongs.Remove(messageId);
+
+        var votesToRemove = Votes.Keys.Where(k => k.MessageId == messageId).ToList();
+        foreach (var key in votesToRemove) Votes.Remove(key);
 
         return true;
     }

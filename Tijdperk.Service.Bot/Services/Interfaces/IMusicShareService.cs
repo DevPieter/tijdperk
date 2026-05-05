@@ -7,5 +7,7 @@ public interface IMusicShareService
 {
     Task<bool> ShareAsync(SocketGuildUser user, string songUrl, string? comment);
 
+    Task<bool> RemoveShareAsync(SocketGuildUser user, ulong messageId);
+    
     Task<bool> CastVoteAsync(SocketGuildUser user, SocketMessage message, MusicVoteLevel level);
 }
