@@ -2,6 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
 using Tijdperk.Service.Bot.Enums;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Models.Odesli;
@@ -42,7 +43,7 @@ public class MusicShareService(
         if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel)
         {
             logger.LogError(
-                "MusicShareService: Failed to find the music channel with ID {ChannelId}.",
+                "Failed to find the music channel with ID {ChannelId}.",
                 options.Value.MusicChannelId
             );
             return false;
@@ -54,7 +55,7 @@ public class MusicShareService(
             .WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`")
             .WithColor(new Color(0x808080));
 
-        songEmbed.AddField("Shared by", user.Mention, true);
+        songEmbed.WithFooter($"Shared by {user.DisplayName}", user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
 
         var odesli = await odesliService.GetOdesliAsync(songUrl);
         if (odesli is not null)
@@ -64,13 +65,17 @@ public class MusicShareService(
             var meta = odesli.GetSongMeta();
             if (meta is not null)
             {
-                if (!string.IsNullOrEmpty(meta.ArtistName)) songEmbed.WithTitle($"{meta.Title} - {meta.ArtistName}");
-                if (!string.IsNullOrEmpty(meta.ThumbnailUrl)) songEmbed.WithThumbnailUrl(meta.ThumbnailUrl);
+                songEmbed.WithTitle(string.IsNullOrEmpty(meta.ArtistName)
+                    ? meta.Title
+                    : $"{meta.Title} - {meta.ArtistName}"
+                );
+
+                if (!string.IsNullOrEmpty(meta.ThumbnailUrl)) songEmbed.WithImageUrl(meta.ThumbnailUrl);
             }
 
-            var linksDescription = odesli.GetFormattedLinks();
-            songEmbed.AddField("Listen on", linksDescription.Count > 0
-                ? string.Join(" | ", linksDescription)
+            var links = odesli.GetFormattedLinks();
+            songEmbed.AddField("Listen on", links.Count > 0
+                ? string.Join(" | ", links)
                 : $"[Odesli]({odesli.PageUrl}) | [Original Link]({songUrl})"
             );
         }
@@ -106,8 +111,12 @@ public class MusicShareService(
         if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel) return;
         if (await channel.GetMessageAsync(messageId) is not IUserMessage message) return;
 
-        var votesForMessage = Votes.Values.Where(v => v.MessageId == messageId).ToList();
+        var embed = message.Embeds.FirstOrDefault();
+        if (embed == null) return;
 
+        var newEmbed = embed.ToEmbedBuilder();
+
+        var votesForMessage = Votes.Values.Where(v => v.MessageId == messageId).ToList();
         var loveCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Love);
         var likeCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Like);
         var neutralCount = votesForMessage.Count(v => v.Level == MusicVoteLevel.Neutral);
@@ -117,25 +126,12 @@ public class MusicShareService(
         var winningLevel = votesForMessage
             .GroupBy(v => v.Level)
             .OrderByDescending(g => g.Count())
-            .FirstOrDefault()?.Key;
+            .FirstOrDefault()?.Key ?? MusicVoteLevel.Neutral;
 
-        var embed = message.Embeds.FirstOrDefault();
-        if (embed == null) return;
+        newEmbed.WithColor(winningLevel.ToColor());
+        newEmbed.WithAuthor($"{winningLevel.ToEmoji()} {winningLevel.ToPastTenseDisplayName()}");
+        newEmbed.WithDescription($"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`");
 
-        var newEmbed = embed.ToEmbedBuilder();
-
-        newEmbed.WithColor(winningLevel switch
-        {
-            MusicVoteLevel.Love => new Color(0xd08ced),
-            MusicVoteLevel.Like => new Color(0x87ceeb),
-            MusicVoteLevel.Neutral => new Color(0x808080),
-            MusicVoteLevel.Dislike => new Color(0xff6347),
-            MusicVoteLevel.Trash => new Color(0x8b4513),
-            _ => Color.Default
-        });
-
-        newEmbed.WithDescription(
-            $"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`");
         await message.ModifyAsync(m => m.Embed = newEmbed.Build());
     }
 }

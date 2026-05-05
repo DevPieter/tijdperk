@@ -16,6 +16,16 @@ public static class MusicVoteLevelExtensions
         _ => ""
     };
 
+    public static string ToPastTenseDisplayName(this MusicVoteLevel level) => level switch
+    {
+        MusicVoteLevel.Love => "Loved",
+        MusicVoteLevel.Like => "Liked",
+        MusicVoteLevel.Neutral => "Neutral",
+        MusicVoteLevel.Dislike => "Disliked",
+        MusicVoteLevel.Trash => "Trashed",
+        _ => ""
+    };
+
     public static string ToEmoji(this MusicVoteLevel level) => level switch
     {
         MusicVoteLevel.Love => "🔥",
@@ -24,6 +34,16 @@ public static class MusicVoteLevelExtensions
         MusicVoteLevel.Dislike => "👎",
         MusicVoteLevel.Trash => "💩",
         _ => ""
+    };
+
+    public static Color ToColor(this MusicVoteLevel level) => level switch
+    {
+        MusicVoteLevel.Love => new Color(0xd08ced),
+        MusicVoteLevel.Like => new Color(0x87ceeb),
+        MusicVoteLevel.Neutral => new Color(0x808080),
+        MusicVoteLevel.Dislike => new Color(0xff6347),
+        MusicVoteLevel.Trash => new Color(0x8b4513),
+        _ => new Color(0x808080)
     };
 
     public static string ToCustomId(this MusicVoteLevel level) => level switch
