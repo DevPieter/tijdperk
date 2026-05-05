@@ -3,7 +3,6 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Service.Bot.Options;
-using Tijdperk.Service.Bot.Services;
 using Tijdperk.Service.Bot.Services.Interfaces;
 using Tijdperk.Service.Bot.Utils;
 
@@ -32,11 +31,25 @@ public class InteractionHandler(
             await message.DeleteAsync();
 
             if (message.Author is not SocketGuildUser guildUser) return;
-            if (!SongUtils.IsValidSongUrl(message.Content)) return;
+
+            var (url, comment) = TryExtractSongUrl(message.Content);
+            if (string.IsNullOrEmpty(url)) return;
 
             await message.Channel.TriggerTypingAsync();
-            await musicShareService.ShareAsync(guildUser, message.Content);
+            await musicShareService.ShareAsync(guildUser, url, comment);
         };
+    }
+
+    // TODO - Move to util and return a more structured result
+    private static (string url, string comment) TryExtractSongUrl(string messageContent)
+    {
+        var words = messageContent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        var url = words.FirstOrDefault(SongUtils.IsValidSongUrl);
+        if (url is null) return (string.Empty, string.Empty);
+
+        var comment = string.Join(' ', words.Where(w => w != url)).Trim();
+        return (url, comment);
     }
 
     private async Task HandleInteractionAsync(SocketInteraction interaction)

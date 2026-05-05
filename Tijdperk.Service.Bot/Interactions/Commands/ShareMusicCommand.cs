@@ -1,5 +1,4 @@
-﻿using Discord.Commands;
-using Discord.Interactions;
+﻿using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Service.Bot.Options;
@@ -14,10 +13,11 @@ public class ShareMusicCommand(
 ) : InteractionModuleBase<SocketInteractionContext>
 {
     [SlashCommand("share-music", "Share a song you like or want to recommend to others.")]
-    [Alias("share-song")]
     public async Task ShareMusic(
-        [Discord.Interactions.Summary("link", "The link to the song.")]
-        string link
+        [Summary("link", "The link to the song.")]
+        string link,
+        [Summary("comment", "An optional comment about the song.")]
+        string? comment = null
     )
     {
         if (Context.User is not SocketGuildUser guildUser)
@@ -42,7 +42,7 @@ public class ShareMusicCommand(
 
         await Context.Interaction.DeferAsync(ephemeral: true);
 
-        if (!await shareService.ShareAsync(guildUser, link))
+        if (!await shareService.ShareAsync(guildUser, link, comment))
         {
             await Context.Interaction.FollowupAsync(
                 "Failed to share the song. Please try again later.",

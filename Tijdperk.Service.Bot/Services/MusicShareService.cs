@@ -38,7 +38,7 @@ public class MusicShareService(
         MusicVoteLevel Level
     );
 
-    public async Task<bool> ShareAsync(SocketGuildUser user, string songUrl)
+    public async Task<bool> ShareAsync(SocketGuildUser user, string songUrl, string? comment)
     {
         if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel)
         {
@@ -79,6 +79,8 @@ public class MusicShareService(
                 : $"[Odesli]({odesli.PageUrl}) | [Original Link]({songUrl})"
             );
         }
+
+        if (!string.IsNullOrEmpty(comment)) songEmbed.AddField("Comment", $"```{comment}```");
 
         var builder = new ComponentBuilder()
             .WithButton(MusicVoteLevel.Love.ToButton())
