@@ -1,0 +1,41 @@
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using Microsoft.Extensions.Options;
+using Tijdperk.Service.Bot;
+using Tijdperk.Service.Bot.Options;
+using Tijdperk.Service.Bot.Services;
+using Tijdperk.Service.Bot.Services.Interfaces;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<BotOptions>(builder.Configuration.GetSection("Discord:Bot"));
+builder.Services.Configure<GuildOptions>(builder.Configuration.GetSection("Discord:Guild"));
+
+builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+{
+    GatewayIntents = GatewayIntents.All,
+    LogGatewayIntentWarnings = false,
+    MessageCacheSize = 100,
+}));
+
+builder.Services.AddHttpClient<IOdesliService, OdesliService>();
+
+builder.Services.AddSingleton<IMusicShareService, MusicShareService>();
+
+builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
+builder.Services.AddSingleton<InteractionHandler>();
+
+var app = builder.Build();
+
+await app.Services.GetRequiredService<InteractionHandler>().InitializeAsync();
+
+var options = app.Services.GetRequiredService<IOptions<BotOptions>>().Value;
+
+var client = app.Services.GetRequiredService<DiscordSocketClient>();
+await client.LoginAsync(TokenType.Bot, options.Token);
+await client.StartAsync();
+
+if (!string.IsNullOrEmpty(options.CustomStatus)) await client.SetCustomStatusAsync(options.CustomStatus);
+
+app.Run();

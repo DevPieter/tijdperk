@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Service.Bot", "Tijdperk.Service.Bot\Tijdperk.Service.Bot.csproj", "{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
