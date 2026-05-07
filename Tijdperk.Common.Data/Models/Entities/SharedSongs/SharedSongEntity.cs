@@ -1,14 +1,33 @@
-﻿namespace Tijdperk.Common.Data.Models.Entities.SharedSongs;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class SharedSongEntity(Guid songId, ulong userId, ulong messageId, string? comment)
+namespace Tijdperk.Common.Data.Models.Entities.SharedSongs;
+
+public class SharedSongEntity
 {
-    public Guid Id { get; } = Guid.NewGuid();
-    public Guid SongId { get; } = songId;
+    [Key]
+    public Guid Id { get; private init; }
 
-    public ulong UserId { get; } = userId;
-    public ulong MessageId { get; } = messageId;
+    public Guid SongId { get; private init; }
 
-    public string? Comment { get; } = comment;
+    public ulong UserId { get; private init; }
+    public ulong MessageId { get; private init; }
 
-    public DateTime CreatedAt { get; } = DateTime.UtcNow;
+    [MaxLength(300)]
+    public string? Comment { get; private init; }
+
+    public DateTime CreatedAt { get; private init; }
+
+    private SharedSongEntity()
+    {
+    }
+
+    public SharedSongEntity(Guid songId, ulong userId, ulong messageId, string? comment)
+    {
+        Id = Guid.NewGuid();
+        SongId = songId;
+        UserId = userId;
+        MessageId = messageId;
+        Comment = comment;
+        CreatedAt = DateTime.UtcNow;
+    }
 }
