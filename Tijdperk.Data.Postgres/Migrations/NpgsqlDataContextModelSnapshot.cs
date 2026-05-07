@@ -22,32 +22,6 @@ namespace Tijdperk.Data.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongVotes.SharedSongVoteEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("SharedSongId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SharedSongVotes");
-                });
-
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongs.SharedSongEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -76,6 +50,32 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SharedSongs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SongVotes.SongVoteEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SongVotes");
                 });
 
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>

@@ -12,12 +12,12 @@ namespace Tijdperk.Logic.Services;
 public class SongService(
     ILogger<SongService> logger,
     IOdesliService odesli,
-    ISongsRepository songsRepository
+    ISongRepository songRepository
 ) : ISongService
 {
     public async Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl)
     {
-        var existing = await songsRepository.GetByUrlAsync(songUrl);
+        var existing = await songRepository.GetByUrlAsync(songUrl);
         if (existing.Type != ResultType.NotFound && existing.Data is not null) return existing;
 
         if (existing.Type != ResultType.NotFound && existing.IsError)
@@ -52,7 +52,7 @@ public class SongService(
             AlbumCoverUrl: meta?.ThumbnailUrl ?? null
         );
 
-        var createResult = await songsRepository.CreateAsync(createDto);
+        var createResult = await songRepository.CreateAsync(createDto);
         if (createResult is { IsSuccess: true, Data: not null }) return createResult;
 
         logger.LogError(

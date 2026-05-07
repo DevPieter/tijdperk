@@ -15,8 +15,15 @@ public class CastVoteMusicButton(
 ) : InteractionModuleBase<SocketInteractionContext>
 {
     [ComponentInteraction(MusicVoteConstants.CustomIdCapture)]
-    public async Task CastVote(string input)
+    public async Task CastVote(string levelStr, string songIdStr)
     {
+        logger.LogInformation(
+            "Received cast vote interaction from user {User} with level {Level} for song ID {SongId}.",
+            Context.User.Username,
+            levelStr,
+            songIdStr
+        );
+
         if (Context.Channel.Id != options.Value.MusicChannelId) return;
         if (Context.Interaction is not SocketMessageComponent component) return;
 
@@ -26,15 +33,23 @@ public class CastVoteMusicButton(
             return;
         }
 
-        var level = input.ToMusicVoteLevel();
+        var level = levelStr.ToSongVoteLevel();
         if (level is null)
         {
-            logger.LogWarning("Invalid vote level input: {Input}", input);
+            logger.LogWarning("Invalid vote level input: {Input}", levelStr);
             await component.RespondAsync("Invalid vote level.", ephemeral: true);
             return;
         }
 
-        var success = await shareService.CastVoteAsync(guildUser, component.Message, level.Value);
+        var songId = Guid.TryParse(songIdStr, out var parsedSongId) ? parsedSongId : (Guid?)null;
+        if (songId is null)
+        {
+            logger.LogWarning("Invalid song ID input: {Input}", songIdStr);
+            await component.RespondAsync("Invalid song ID.", ephemeral: true);
+            return;
+        }
+
+        var success = await shareService.CastVoteAsync(guildUser, songId.Value, level.Value);
         if (!success)
         {
             logger.LogWarning(
@@ -43,7 +58,10 @@ public class CastVoteMusicButton(
                 component.Message.Id
             );
 
-            await component.RespondAsync("Failed to cast vote. This message may not be a shared song.", ephemeral: true);
+            await component.RespondAsync(
+                "Failed to cast vote. This message may not be a shared song.",
+                ephemeral: true
+            );
             return;
         }
 

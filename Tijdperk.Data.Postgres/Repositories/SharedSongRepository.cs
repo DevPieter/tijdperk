@@ -9,37 +9,6 @@ namespace Tijdperk.Data.Postgres.Repositories;
 
 public class SharedSongRepository(NpgsqlDataContext context) : ISharedSongRepository
 {
-    public async Task<ResultObject<SharedSongEntity>> GetByIdAsync(Guid id)
-    {
-        var sharedSong = await context.SharedSongs
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ss => ss.Id == id);
-
-        return sharedSong is null
-            ? ResultObject<SharedSongEntity>.NotFound()
-            : ResultObject<SharedSongEntity>.Success(sharedSong);
-    }
-
-    public async Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId)
-    {
-        var sharedSongs = await context.SharedSongs
-            .AsNoTracking()
-            .Where(ss => ss.SongId == songId)
-            .ToListAsync();
-
-        return ResultObject<List<SharedSongEntity>>.Success(sharedSongs);
-    }
-
-    public async Task<ResultObject<List<SharedSongEntity>>> GetByUserIdAsync(ulong userId)
-    {
-        var sharedSongs = await context.SharedSongs
-            .AsNoTracking()
-            .Where(ss => ss.UserId == userId)
-            .ToListAsync();
-
-        return ResultObject<List<SharedSongEntity>>.Success(sharedSongs);
-    }
-
     public async Task<ResultObject<SharedSongEntity>> CreateAsync(Guid songId, CreateSharedSongDto dto)
     {
         var entity = new SharedSongEntity(
@@ -53,6 +22,29 @@ public class SharedSongRepository(NpgsqlDataContext context) : ISharedSongReposi
         await context.SaveChangesAsync();
 
         return ResultObject<SharedSongEntity>.Success(entity);
+    }
+
+    public async Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId)
+    {
+        var sharedSongs = await context.SharedSongs
+            .AsNoTracking()
+            .Where(ss => ss.SongId == songId)
+            .ToListAsync();
+
+        return ResultObject<List<SharedSongEntity>>.Success(sharedSongs);
+    }
+
+    public async Task<ResultObject<ulong>> GetLatestMessageIdBySongIdAsync(Guid songId)
+    {
+        var latestMessageId = await context.SharedSongs
+            .Where(ss => ss.SongId == songId && ss.MessageId.HasValue)
+            .OrderByDescending(ss => ss.CreatedAt)
+            .Select(ss => ss.MessageId!.Value)
+            .FirstOrDefaultAsync();
+
+        return latestMessageId == 0
+            ? ResultObject<ulong>.NotFound("No message ID found for this song")
+            : ResultObject<ulong>.Success(latestMessageId);
     }
 
     public async Task<Result> ClearMessageIdsAsync(List<ulong> messageIds)

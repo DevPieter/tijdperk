@@ -18,29 +18,14 @@ namespace Tijdperk.Data.Postgres.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SongId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    MessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    MessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
                     Comment = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SharedSongs", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "SharedSongVotes",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SharedSongId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    Level = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SharedSongVotes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -59,6 +44,22 @@ namespace Tijdperk.Data.Postgres.Migrations
                 {
                     table.PrimaryKey("PK_Songs", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "SongVotes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SongId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SongVotes", x => x.Id);
+                });
         }
 
         /// <inheritdoc />
@@ -68,10 +69,10 @@ namespace Tijdperk.Data.Postgres.Migrations
                 name: "SharedSongs");
 
             migrationBuilder.DropTable(
-                name: "SharedSongVotes");
+                name: "Songs");
 
             migrationBuilder.DropTable(
-                name: "Songs");
+                name: "SongVotes");
         }
     }
 }

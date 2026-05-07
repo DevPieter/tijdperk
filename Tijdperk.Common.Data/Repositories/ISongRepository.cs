@@ -4,12 +4,11 @@ using Tijdperk.Common.Data.Models.Entities.Songs;
 
 namespace Tijdperk.Common.Data.Repositories;
 
-public interface ISongsRepository // TODO - Rename to ISongRepository
+public interface ISongRepository // TODO - Rename to ISongRepository
 {
     // TODO - Check if it is better to return a DTO instead of the entity.
+    Task<ResultObject<SongEntity>> CreateAsync(CreateSongDto dto);
 
     Task<ResultObject<SongEntity>> GetByIdAsync(Guid id);
     Task<ResultObject<SongEntity>> GetByUrlAsync(string url);
-
-    Task<ResultObject<SongEntity>> CreateAsync(CreateSongDto dto);
 }

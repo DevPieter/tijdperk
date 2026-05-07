@@ -7,8 +7,24 @@ using Tijdperk.Data.Postgres.Data;
 
 namespace Tijdperk.Data.Postgres.Repositories;
 
-public class SongsRepository(NpgsqlDataContext context) : ISongsRepository
+public class SongRepository(NpgsqlDataContext context) : ISongRepository
 {
+    public async Task<ResultObject<SongEntity>> CreateAsync(CreateSongDto dto)
+    {
+        var entity = new SongEntity(
+            url: dto.Url,
+            odesliUrl: dto.OdesliUrl,
+            title: dto.Title,
+            artist: dto.Artist,
+            albumCoverUrl: dto.AlbumCoverUrl
+        );
+
+        context.Songs.Add(entity);
+        await context.SaveChangesAsync();
+
+        return ResultObject<SongEntity>.Success(entity);
+    }
+
     public async Task<ResultObject<SongEntity>> GetByIdAsync(Guid id)
     {
         var song = await context.Songs
@@ -29,21 +45,5 @@ public class SongsRepository(NpgsqlDataContext context) : ISongsRepository
         return song is null
             ? ResultObject<SongEntity>.NotFound()
             : ResultObject<SongEntity>.Success(song);
-    }
-
-    public async Task<ResultObject<SongEntity>> CreateAsync(CreateSongDto dto)
-    {
-        var entity = new SongEntity(
-            url: dto.Url,
-            odesliUrl: dto.OdesliUrl,
-            title: dto.Title,
-            artist: dto.Artist,
-            albumCoverUrl: dto.AlbumCoverUrl
-        );
-
-        context.Songs.Add(entity);
-        await context.SaveChangesAsync();
-
-        return ResultObject<SongEntity>.Success(entity);
     }
 }

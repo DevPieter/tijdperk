@@ -36,6 +36,9 @@ public class SongShareService(
     public async Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId)
         => await shareRepository.GetBySongIdAsync(songId);
 
+    public async Task<ResultObject<ulong>> GetLatestMessageIdBySongIdAsync(Guid songId)
+        => await shareRepository.GetLatestMessageIdBySongIdAsync(songId);
+
     public async Task<Result> ClearMessageIdsAsync(List<ulong> messageIds)
         => await shareRepository.ClearMessageIdsAsync(messageIds);
 }

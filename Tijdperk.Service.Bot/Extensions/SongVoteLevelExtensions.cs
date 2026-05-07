@@ -76,11 +76,11 @@ public static class SongVoteLevelExtensions
         _ => null
     };
 
-    public static ButtonBuilder ToButton(this SongVoteLevel level)
+    public static ButtonBuilder ToButton(this SongVoteLevel level, Guid songId)
     {
         var label = level.ToDisplayName();
         var emoji = new Emoji(level.ToEmoji());
-        var customId = level.ToCustomId();
+        var customId = $"{level.ToCustomId()}_{songId}";
 
         var style = level switch
         {

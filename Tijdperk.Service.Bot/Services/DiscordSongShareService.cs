@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
+using Tijdperk.Common.Core.Enums.Songs;
+using Tijdperk.Common.Data.Models.DTOs.SongVotes;
 using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot.Enums;
 using Tijdperk.Service.Bot.Extensions;
@@ -14,7 +16,8 @@ public class DiscordSongShareService(
     IOptions<GuildOptions> options,
     DiscordSocketClient client,
     ISongService songService,
-    ISongShareService songShareService
+    ISongShareService shareService,
+    ISongVoteService voteService
 ) : IDiscordSongShareService
 {
     public async Task<bool> ShareToChannelAsync(SocketGuildUser user, string songUrl, string? comment)
@@ -41,7 +44,7 @@ public class DiscordSongShareService(
 
         var song = songResult.Data!;
 
-        var sharesResult = await songShareService.GetBySongIdAsync(song.Id);
+        var sharesResult = await shareService.GetBySongIdAsync(song.Id);
         if (sharesResult.IsError || sharesResult.Data is null)
         {
             logger.LogError(
@@ -84,15 +87,15 @@ public class DiscordSongShareService(
         if (!string.IsNullOrEmpty(comment)) songEmbed.AddField("Comment", $"```{comment}```");
 
         var builder = new ComponentBuilder()
-            .WithButton(MusicVoteLevel.Love.ToButton())
-            .WithButton(MusicVoteLevel.Like.ToButton())
-            .WithButton(MusicVoteLevel.Neutral.ToButton())
-            .WithButton(MusicVoteLevel.Dislike.ToButton())
-            .WithButton(MusicVoteLevel.Trash.ToButton());
+            .WithButton(SongVoteLevel.Love.ToButton(song.Id))
+            .WithButton(SongVoteLevel.Like.ToButton(song.Id))
+            .WithButton(SongVoteLevel.Neutral.ToButton(song.Id))
+            .WithButton(SongVoteLevel.Dislike.ToButton(song.Id))
+            .WithButton(SongVoteLevel.Trash.ToButton(song.Id));
 
         var message = await channel.SendMessageAsync(embed: songEmbed.Build(), components: builder.Build());
 
-        var registerResult = await songShareService.RegisterShareAsync(
+        var registerResult = await shareService.RegisterShareAsync(
             song: song,
             userId: user.Id,
             messageId: message.Id,
@@ -107,7 +110,7 @@ public class DiscordSongShareService(
                 .ToList();
 
             await channel.DeleteMessagesAsync(messageIds);
-            await songShareService.ClearMessageIdsAsync(messageIds);
+            await shareService.ClearMessageIdsAsync(messageIds);
             return true;
         }
 
@@ -177,16 +180,63 @@ public class DiscordSongShareService(
         // return true;
     }
 
-    public async Task<bool> CastVoteAsync(SocketGuildUser user, SocketMessage message, MusicVoteLevel level)
+    public async Task<bool> CastVoteAsync(SocketGuildUser user, Guid songId, SongVoteLevel level)
     {
-        throw new NotImplementedException();
-        // if (!SharedSongs.ContainsKey(message.Id)) return false;
-        //
-        // var voteKey = new VoteKey(user.Id, message.Id);
-        // Votes[voteKey] = new VoteHolder(user.Id, message.Id, level);
-        //
-        // await UpdateMessageStatsAsync(message.Id);
-        // return true;
+        var voteResult = await voteService.CreateOrUpdateAsync(songId, new CreateSongVoteDto(
+            UserId: user.Id,
+            Level: level
+        ));
+
+        if (voteResult.IsError)
+        {
+            logger.LogError(
+                "Failed to cast vote for user {UserId} and song ID {SongId}: {ErrorMessage}",
+                user.Id,
+                songId,
+                voteResult.Message
+            );
+            return false;
+        }
+
+        if (client.GetChannel(options.Value.MusicChannelId) is not ITextChannel channel)
+        {
+            logger.LogError(
+                "Failed to find the music channel with ID {ChannelId}.",
+                options.Value.MusicChannelId
+            );
+            return true;
+        }
+
+        var messageIdsResult = await shareService.GetLatestMessageIdBySongIdAsync(songId);
+        if (messageIdsResult.IsError)
+        {
+            logger.LogError(
+                "Failed to fetch message ID for song ID {SongId}: {ErrorMessage}",
+                songId,
+                messageIdsResult?.Message
+            );
+            return true;
+        }
+
+        var messageId = messageIdsResult.Data;
+        if (messageId == 0)
+        {
+            logger.LogWarning(
+                "No message ID found for song ID {SongId}, cannot update vote stats.",
+                songId
+            );
+            return true;
+        }
+
+        logger.LogInformation(
+            "User {UserId} cast a {VoteLevel} vote for song ID {SongId} (message ID {MessageId}).",
+            user.Id,
+            level,
+            songId,
+            messageId
+        );
+
+        return true;
     }
 
     // private async Task UpdateMessageStatsAsync(ulong messageId)

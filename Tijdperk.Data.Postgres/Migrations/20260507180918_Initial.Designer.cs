@@ -12,7 +12,7 @@ using Tijdperk.Data.Postgres.Data;
 namespace Tijdperk.Data.Postgres.Migrations
 {
     [DbContext(typeof(NpgsqlDataContext))]
-    [Migration("20260507130038_Initial")]
+    [Migration("20260507180918_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -24,32 +24,6 @@ namespace Tijdperk.Data.Postgres.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongVotes.SharedSongVoteEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("SharedSongId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SharedSongVotes");
-                });
 
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongs.SharedSongEntity", b =>
                 {
@@ -64,11 +38,14 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("MessageId")
+                    b.Property<decimal?>("MessageId")
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<Guid>("SongId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("UserId")
                         .HasColumnType("numeric(20,0)");
@@ -76,6 +53,32 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SharedSongs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SongVotes.SongVoteEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SongVotes");
                 });
 
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>

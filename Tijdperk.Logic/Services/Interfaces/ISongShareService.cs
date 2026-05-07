@@ -10,9 +10,7 @@ public interface ISongShareService
 
     Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId);
 
+    Task<ResultObject<ulong>> GetLatestMessageIdBySongIdAsync(Guid songId);
+
     Task<Result> ClearMessageIdsAsync(List<ulong> messageIds);
-
-    // Task<bool> RemoveShareAsync(ulong userId, ulong messageId);
-
-    // Task<bool> CastVoteAsync(ulong userId, ulong messageId, SongVoteLevel level);
 }
