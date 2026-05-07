@@ -14,6 +14,6 @@
 - - -> `Tijdperk.Logic`
 - - -> `Tijdperk.Data.Postgres`
 
-
 - `Tijdperk.Logic` -> `Tijdperk.Common.Data`
+- `Tijdperk.Data.Postgres` -> `Tijdperk.Common.Data`
 - `Tijdperk.Common.Data` -> `Tijdperk.Common.Core`

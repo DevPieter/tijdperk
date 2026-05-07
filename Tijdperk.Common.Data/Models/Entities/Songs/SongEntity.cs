@@ -1,15 +1,48 @@
-﻿namespace Tijdperk.Common.Data.Models.Entities.Songs;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class SongEntity(string url, string? odesliUrl, string? title, string? artist, string? albumCoverUrl)
+namespace Tijdperk.Common.Data.Models.Entities.Songs;
+
+public class SongEntity
 {
-    public Guid Id { get; } = Guid.NewGuid();
+    [Key]
+    public Guid Id { get; private init; }
 
-    public string Url { get; } = url;
-    public string? OdesliUrl { get; } = odesliUrl;
+    [MaxLength(500)]
+    public string Url { get; private init; } = null!;
 
-    public string? Title { get; } = title;
-    public string? Artist { get; } = artist;
-    public string? AlbumCoverUrl { get; } = albumCoverUrl;
+    [MaxLength(500)]
+    public string? OdesliUrl { get; private init; }
 
-    public DateTime CreatedAt { get; } = DateTime.UtcNow;
+    [MaxLength(256)]
+    public string? Title { get; private init; }
+
+    [MaxLength(256)]
+    public string? Artist { get; private init; }
+
+    [MaxLength(500)]
+    public string? AlbumCoverUrl { get; private init; }
+
+    // public List<
+
+    // public record PlatformLink(
+    //     string Platform,
+    //     string Url
+    // );
+
+    public DateTime CreatedAt { get; private init; }
+
+    private SongEntity()
+    {
+    }
+
+    public SongEntity(string url, string? odesliUrl, string? title, string? artist, string? albumCoverUrl)
+    {
+        Id = Guid.NewGuid();
+        Url = url;
+        OdesliUrl = odesliUrl;
+        Title = title;
+        Artist = artist;
+        AlbumCoverUrl = albumCoverUrl;
+        CreatedAt = DateTime.UtcNow;
+    }
 }
