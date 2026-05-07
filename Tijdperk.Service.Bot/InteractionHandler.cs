@@ -32,13 +32,15 @@ public class InteractionHandler(
 
             var (url, comment) = TryExtractSongUrl(message.Content);
             if (string.IsNullOrEmpty(url)) return;
+            if (string.IsNullOrWhiteSpace(comment)) comment = null;
 
             await message.Channel.TriggerTypingAsync();
-            await message.DeleteAsync();
 
             using var scope = services.CreateScope();
             var songShareService = scope.ServiceProvider.GetRequiredService<IDiscordSongShareService>();
             await songShareService.ShareToChannelAsync(guildUser, url, comment);
+
+            await message.DeleteAsync();
         };
     }
 
