@@ -3,8 +3,8 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Common.Data.Models.DTOs.SongVotes;
+using Tijdperk.Common.Data.Models.Entities.SongVotes;
 using Tijdperk.Logic.Services.Interfaces;
-using Tijdperk.Service.Bot.Enums;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Options;
 using Tijdperk.Service.Bot.Services.Interfaces;
@@ -37,7 +37,7 @@ public class DiscordSongShareService(
             logger.LogError(
                 "Failed to get or create song for URL {SongUrl}: {ErrorMessage}",
                 songUrl,
-                songResult?.Message ?? "Unknown error"
+                songResult.Message
             );
             return false;
         }
@@ -50,13 +50,12 @@ public class DiscordSongShareService(
             logger.LogError(
                 "Failed to fetch shares for song ID {SongId}: {ErrorMessage}",
                 song.Id,
-                sharesResult?.Message ?? "Unknown error"
+                sharesResult.Message
             );
             return false;
         }
 
         var songEmbed = new EmbedBuilder();
-        songEmbed.WithColor(new Color(0x808080));
         songEmbed.WithUrl(song.OdesliUrl ?? song.Url);
 
         songEmbed.WithTitle(string.IsNullOrEmpty(song.Title)
@@ -69,10 +68,21 @@ public class DiscordSongShareService(
         var shareCount = sharesResult.Data.Count;
         if (shareCount > 0)
         {
-            // TODO - Fetch actual stats
-            songEmbed.WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`");
+            var voteStatsResult = await voteService.GetBySongIdAsync(song.Id);
+            if (voteStatsResult.IsError || voteStatsResult.Data is null)
+            {
+                logger.LogError(
+                    "Failed to fetch vote stats for song ID {SongId}: {ErrorMessage}",
+                    song.Id,
+                    voteStatsResult.Message
+                );
+                UpdateEmbed(songEmbed);
+            }
+
+            var votes = voteStatsResult.Data;
+            UpdateEmbed(songEmbed, votes!);
         }
-        else songEmbed.WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`");
+        else UpdateEmbed(songEmbed);
 
         if (!string.IsNullOrEmpty(song.AlbumCoverUrl)) songEmbed.WithImageUrl(song.AlbumCoverUrl);
 
@@ -164,20 +174,6 @@ public class DiscordSongShareService(
     public async Task<bool> RemoveShareAsync(SocketGuildUser user, ulong messageId)
     {
         throw new NotImplementedException();
-        // // TODO - It may be better to use custom IDs instead of relying on the message ID
-        // if (!SharedSongs.TryGetValue(messageId, out var song)) return false;
-        // if (song.UserId != user.Id) return false;
-        //
-        // if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel) return false;
-        // if (await channel.GetMessageAsync(messageId) is not IUserMessage message) return false;
-        //
-        // await message.DeleteAsync();
-        // SharedSongs.Remove(messageId);
-        //
-        // var votesToRemove = Votes.Keys.Where(k => k.MessageId == messageId).ToList();
-        // foreach (var key in votesToRemove) Votes.Remove(key);
-        //
-        // return true;
     }
 
     public async Task<bool> CastVoteAsync(SocketGuildUser user, Guid songId, SongVoteLevel level)
@@ -228,58 +224,81 @@ public class DiscordSongShareService(
             return true;
         }
 
-        logger.LogInformation(
-            "User {UserId} cast a {VoteLevel} vote for song ID {SongId} (message ID {MessageId}).",
-            user.Id,
-            level,
-            songId,
-            messageId
-        );
+        var message = await channel.GetMessageAsync(messageId);
+        if (message is not IUserMessage userMessage)
+        {
+            logger.LogError(
+                "Failed to fetch message with ID {MessageId} for song ID {SongId}.",
+                messageId,
+                songId
+            );
+            return true;
+        }
 
+        var embed = message.Embeds.FirstOrDefault();
+        if (embed is null)
+        {
+            logger.LogError(
+                "No embed found in message ID {MessageId} for song ID {SongId}.",
+                messageId,
+                songId
+            );
+            return true;
+        }
+
+        var votesResult = await voteService.GetBySongIdAsync(songId);
+        if (votesResult.IsError || votesResult.Data is null)
+        {
+            logger.LogError(
+                "Failed to fetch votes for song ID {SongId}: {ErrorMessage}",
+                songId,
+                votesResult.Message
+            );
+            return true;
+        }
+
+        var newEmbed = embed.ToEmbedBuilder();
+        UpdateEmbed(newEmbed, votesResult.Data);
+
+        await userMessage.ModifyAsync(m => m.Embed = newEmbed.Build());
         return true;
     }
 
-    // private async Task UpdateMessageStatsAsync(ulong messageId)
-    // {
-    //     if (!SharedSongs.ContainsKey(messageId)) return;
-    //
-    //     if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel) return;
-    //     if (await channel.GetMessageAsync(messageId) is not IUserMessage message) return;
-    //
-    //     var embed = message.Embeds.FirstOrDefault();
-    //     if (embed == null) return;
-    //
-    //     var newEmbed = embed.ToEmbedBuilder();
-    //     var votes = Votes.Values.Where(v => v.MessageId == messageId).ToList();
-    //
-    //     var winningLevel = CalculateWinningLevel(votes);
-    //     newEmbed.WithColor(winningLevel.ToColor());
-    //     newEmbed.WithAuthor($"{winningLevel.ToEmoji()} {winningLevel.ToPastTenseDisplayName()}");
-    //
-    //     var loveCount = votes.Count(v => v.Level == MusicVoteLevel.Love);
-    //     var likeCount = votes.Count(v => v.Level == MusicVoteLevel.Like);
-    //     var neutralCount = votes.Count(v => v.Level == MusicVoteLevel.Neutral);
-    //     var dislikeCount = votes.Count(v => v.Level == MusicVoteLevel.Dislike);
-    //     var trashCount = votes.Count(v => v.Level == MusicVoteLevel.Trash);
-    //
-    //     newEmbed.WithDescription(
-    //         $"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`"
-    //     );
-    //     await message.ModifyAsync(m => m.Embed = newEmbed.Build());
-    // }
-    //
-    // private MusicVoteLevel CalculateWinningLevel(List<VoteHolder> votes)
-    // {
-    //     if (votes.Count == 0) return MusicVoteLevel.Neutral;
-    //     var averageScore = votes.Average(v => v.Level.ToWeight());
-    //
-    //     return averageScore switch
-    //     {
-    //         >= 1.5 => MusicVoteLevel.Love,
-    //         >= 0.5 => MusicVoteLevel.Like,
-    //         > -0.5 => MusicVoteLevel.Neutral,
-    //         > -1.5 => MusicVoteLevel.Dislike,
-    //         _ => MusicVoteLevel.Trash
-    //     };
-    // }
+    private static void UpdateEmbed(EmbedBuilder embed, List<SongVoteEntity>? votes = null)
+    {
+        votes ??= [];
+
+        var winningLevel = CalculateWinningLevel(votes);
+        embed.WithColor(winningLevel.ToColor());
+
+        embed.WithAuthor(votes.Count > 0
+            ? $"{winningLevel.ToEmoji()} {winningLevel.ToPastTenseDisplayName()}"
+            : "🫣 No votes yet"
+        );
+
+        var loveCount = votes.Count(v => v.Level == SongVoteLevel.Love);
+        var likeCount = votes.Count(v => v.Level == SongVoteLevel.Like);
+        var neutralCount = votes.Count(v => v.Level == SongVoteLevel.Neutral);
+        var dislikeCount = votes.Count(v => v.Level == SongVoteLevel.Dislike);
+        var trashCount = votes.Count(v => v.Level == SongVoteLevel.Trash);
+
+        embed.WithDescription(
+            $"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`"
+        );
+    }
+
+    private static SongVoteLevel CalculateWinningLevel(List<SongVoteEntity> votes)
+    {
+        if (votes.Count == 0) return SongVoteLevel.Neutral;
+        var averageScore = votes.Average(v => v.Level.ToWeight());
+
+        return averageScore switch
+        {
+            >= 1.5 => SongVoteLevel.Love,
+            >= 0.5 => SongVoteLevel.Like,
+            > -0.5 => SongVoteLevel.Neutral,
+            > -1.5 => SongVoteLevel.Dislike,
+            _ => SongVoteLevel.Trash
+        };
+    }
 }

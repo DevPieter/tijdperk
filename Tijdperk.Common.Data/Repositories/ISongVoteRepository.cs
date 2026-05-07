@@ -9,6 +9,5 @@ public interface ISongVoteRepository
     // TODO - Check if it is better to return a DTO instead of the entity.
     Task<ResultObject<SongVoteEntity>> CreateOrUpdateAsync(Guid songId, CreateSongVoteDto dto);
 
-    // Task<ResultObject<SongVoteEntity>> GetByIdAsync(Guid id);
-    // Task<ResultObject<SongVoteEntity>> GetByUserIdAndSongIdAsync(ulong userId, Guid songId);
+    Task<ResultObject<List<SongVoteEntity>>> GetBySongIdAsync(Guid songId);
 }

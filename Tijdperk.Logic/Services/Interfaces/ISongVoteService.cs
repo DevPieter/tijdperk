@@ -7,4 +7,6 @@ namespace Tijdperk.Logic.Services.Interfaces;
 public interface ISongVoteService
 {
     Task<ResultObject<SongVoteEntity>> CreateOrUpdateAsync(Guid songId, CreateSongVoteDto dto);
+
+    Task<ResultObject<List<SongVoteEntity>>> GetBySongIdAsync(Guid songId);
 }

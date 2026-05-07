@@ -35,4 +35,7 @@ public class SongVoteService(
         );
         return ResultObject<SongVoteEntity>.InternalError("Failed to fetch song for voting");
     }
+
+    public async Task<ResultObject<List<SongVoteEntity>>> GetBySongIdAsync(Guid songId)
+        => await voteRepository.GetBySongIdAsync(songId);
 }

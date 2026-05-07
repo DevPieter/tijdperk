@@ -34,25 +34,12 @@ public class SongVoteRepository(NpgsqlDataContext context) : ISongVoteRepository
         return ResultObject<SongVoteEntity>.Success(newVote);
     }
 
-    // public async Task<ResultObject<SongVoteEntity>> GetByIdAsync(Guid id)
-    // {
-    //     var vote = await context.SongVotes
-    //         .AsNoTracking()
-    //         .FirstOrDefaultAsync(v => v.Id == id);
-    //
-    //     return vote is null
-    //         ? ResultObject<SongVoteEntity>.NotFound()
-    //         : ResultObject<SongVoteEntity>.Success(vote);
-    // }
-    //
-    // public async Task<ResultObject<SongVoteEntity>> GetByUserIdAndSongIdAsync(ulong userId, Guid songId)
-    // {
-    //     var vote = await context.SongVotes
-    //         .AsNoTracking()
-    //         .FirstOrDefaultAsync(v => v.UserId == userId && v.SongId == songId);
-    //
-    //     return vote is null
-    //         ? ResultObject<SongVoteEntity>.NotFound()
-    //         : ResultObject<SongVoteEntity>.Success(vote);
-    // }
+    public async Task<ResultObject<List<SongVoteEntity>>> GetBySongIdAsync(Guid songId)
+    {
+        var votes = await context.SongVotes
+            .Where(v => v.SongId == songId)
+            .ToListAsync();
+
+        return ResultObject<List<SongVoteEntity>>.Success(votes);
+    }
 }
