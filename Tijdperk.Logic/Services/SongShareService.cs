@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Common.Data.Models.DTOs.SharedSongs;
+using Tijdperk.Common.Data.Models.Entities.SharedSongs;
 using Tijdperk.Common.Data.Models.Entities.Songs;
 using Tijdperk.Common.Data.Repositories;
 using Tijdperk.Logic.Services.Interfaces;
@@ -10,7 +10,6 @@ namespace Tijdperk.Logic.Services;
 
 public class SongShareService(
     ILogger<SongShareService> logger,
-    ISongService songService,
     ISharedSongRepository shareRepository
 ) : ISongShareService
 {
@@ -34,13 +33,9 @@ public class SongShareService(
         return Result.InternalError("Failed to create shared song entry");
     }
 
-    public Task<bool> RemoveShareAsync(ulong userId, ulong messageId)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId)
+        => await shareRepository.GetBySongIdAsync(songId);
 
-    public Task<bool> CastVoteAsync(ulong userId, ulong messageId, SongVoteLevel level)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Result> ClearMessageIdsAsync(List<ulong> messageIds)
+        => await shareRepository.ClearMessageIdsAsync(messageIds);
 }

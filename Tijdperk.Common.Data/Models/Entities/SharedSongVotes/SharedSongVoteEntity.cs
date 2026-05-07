@@ -23,11 +23,13 @@ public class SharedSongVoteEntity
     public SharedSongVoteEntity(Guid sharedSongId, ulong userId, SongVoteLevel level)
     {
         Id = Guid.NewGuid();
+
         SharedSongId = sharedSongId;
         UserId = userId;
         Level = level;
+
         CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = CreatedAt;
     }
 
     public void UpdateLevel(SongVoteLevel newLevel)

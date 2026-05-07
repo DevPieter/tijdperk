@@ -13,4 +13,6 @@ public interface ISharedSongRepository
     Task<ResultObject<List<SharedSongEntity>>> GetByUserIdAsync(ulong userId);
 
     Task<ResultObject<SharedSongEntity>> CreateAsync(Guid songId, CreateSharedSongDto dto);
+
+    Task<Result> ClearMessageIdsAsync(List<ulong> messageIds);
 }

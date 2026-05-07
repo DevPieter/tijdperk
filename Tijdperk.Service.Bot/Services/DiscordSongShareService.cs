@@ -15,32 +15,11 @@ public class DiscordSongShareService(
     DiscordSocketClient client,
     ISongService songService,
     ISongShareService songShareService
-    // IOdesliService odesliService
 ) : IDiscordSongShareService
 {
-    // private static Dictionary<ulong, SharedSongHolder> SharedSongs { get; } = new();
-    // private static Dictionary<VoteKey, VoteHolder> Votes { get; } = new();
-    //
-    // public record SharedSongHolder(
-    //     ulong UserId,
-    //     ulong MessageId,
-    //     string Song
-    // );
-    //
-    // public record VoteKey(
-    //     ulong UserId,
-    //     ulong MessageId
-    // );
-    //
-    // public record VoteHolder(
-    //     ulong UserId,
-    //     ulong MessageId,
-    //     MusicVoteLevel Level
-    // );
-
     public async Task<bool> ShareToChannelAsync(SocketGuildUser user, string songUrl, string? comment)
     {
-        if (client.GetChannel(options.Value.MusicChannelId) is not IMessageChannel channel)
+        if (client.GetChannel(options.Value.MusicChannelId) is not ITextChannel channel)
         {
             logger.LogError(
                 "Failed to find the music channel with ID {ChannelId}.",
@@ -50,7 +29,7 @@ public class DiscordSongShareService(
         }
 
         var songResult = await songService.GetOrCreateSongAsync(songUrl);
-        if (songResult is null || songResult.IsError)
+        if (songResult.IsError || songResult.Data is null)
         {
             logger.LogError(
                 "Failed to get or create song for URL {SongUrl}: {ErrorMessage}",
@@ -62,11 +41,21 @@ public class DiscordSongShareService(
 
         var song = songResult.Data!;
 
-        var songEmbed = new EmbedBuilder()
-            .WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`")
-            .WithColor(new Color(0x808080));
+        var sharesResult = await songShareService.GetBySongIdAsync(song.Id);
+        if (sharesResult.IsError || sharesResult.Data is null)
+        {
+            logger.LogError(
+                "Failed to fetch shares for song ID {SongId}: {ErrorMessage}",
+                song.Id,
+                sharesResult?.Message ?? "Unknown error"
+            );
+            return false;
+        }
 
+        var songEmbed = new EmbedBuilder();
+        songEmbed.WithColor(new Color(0x808080));
         songEmbed.WithUrl(song.OdesliUrl ?? song.Url);
+
         songEmbed.WithTitle(string.IsNullOrEmpty(song.Title)
             ? song.Url
             : string.IsNullOrEmpty(song.Artist)
@@ -74,31 +63,23 @@ public class DiscordSongShareService(
                 : $"{song.Title} - {song.Artist}"
         );
 
-        if (!string.IsNullOrEmpty(song.AlbumCoverUrl)) songEmbed.WithImageUrl(song.AlbumCoverUrl);
-        songEmbed.WithFooter($"Shared by {user.DisplayName}", user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl());
+        var shareCount = sharesResult.Data.Count;
+        if (shareCount > 0)
+        {
+            // TODO - Fetch actual stats
+            songEmbed.WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`");
+        }
+        else songEmbed.WithDescription("`0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`");
 
-        // var odesli = await odesliService.GetOdesliAsync(songUrl);
-        // if (odesli is not null)
-        // {
-        //     songEmbed.WithUrl(odesli.PageUrl);
-        //
-        //     var meta = odesli.GetSongMeta();
-        //     if (meta is not null)
-        //     {
-        //         songEmbed.WithTitle(string.IsNullOrEmpty(meta.ArtistName)
-        //             ? meta.Title
-        //             : $"{meta.Title} - {meta.ArtistName}"
-        //         );
-        //
-        //         if (!string.IsNullOrEmpty(meta.ThumbnailUrl)) songEmbed.WithImageUrl(meta.ThumbnailUrl);
-        //     }
-        //
-        //     var links = odesli.GetFormattedLinks();
-        //     songEmbed.AddField("Listen on", links.Count > 0
-        //         ? string.Join(" | ", links)
-        //         : $"[Odesli]({odesli.PageUrl}) | [Original Link]({songUrl})"
-        //     );
-        // }
+        if (!string.IsNullOrEmpty(song.AlbumCoverUrl)) songEmbed.WithImageUrl(song.AlbumCoverUrl);
+
+        songEmbed.WithFooter(sharesResult.Data!.Count > 0
+                ? $"Shared by {user.DisplayName} and {shareCount} time{(shareCount > 1 ? "s" : "")} before!"
+                : $"{user.DisplayName} is the first to share this song!",
+            user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl()
+        );
+
+        // TODO - Place links
 
         if (!string.IsNullOrEmpty(comment)) songEmbed.AddField("Comment", $"```{comment}```");
 
@@ -118,7 +99,17 @@ public class DiscordSongShareService(
             comment: comment
         );
 
-        if (registerResult.IsSuccess) return true;
+        if (registerResult.IsSuccess)
+        {
+            var messageIds = sharesResult.Data!
+                .Where(s => s.MessageId is not null)
+                .Select(s => s.MessageId!.Value)
+                .ToList();
+
+            await channel.DeleteMessagesAsync(messageIds);
+            await songShareService.ClearMessageIdsAsync(messageIds);
+            return true;
+        }
 
         logger.LogError(
             "Failed to register song share for user {UserId} and song {SongUrl}: {ErrorMessage}",
@@ -143,6 +134,29 @@ public class DiscordSongShareService(
 
         return false;
     }
+
+    // var odesli = await odesliService.GetOdesliAsync(songUrl);
+    // if (odesli is not null)
+    // {
+    //     songEmbed.WithUrl(odesli.PageUrl);
+    //
+    //     var meta = odesli.GetSongMeta();
+    //     if (meta is not null)
+    //     {
+    //         songEmbed.WithTitle(string.IsNullOrEmpty(meta.ArtistName)
+    //             ? meta.Title
+    //             : $"{meta.Title} - {meta.ArtistName}"
+    //         );
+    //
+    //         if (!string.IsNullOrEmpty(meta.ThumbnailUrl)) songEmbed.WithImageUrl(meta.ThumbnailUrl);
+    //     }
+    //
+    //     var links = odesli.GetFormattedLinks();
+    //     songEmbed.AddField("Listen on", links.Count > 0
+    //         ? string.Join(" | ", links)
+    //         : $"[Odesli]({odesli.PageUrl}) | [Original Link]({songUrl})"
+    //     );
+    // }
 
     public async Task<bool> RemoveShareAsync(SocketGuildUser user, ulong messageId)
     {

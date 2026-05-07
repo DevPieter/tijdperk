@@ -15,7 +15,7 @@ public class SongService(
     ISongsRepository songsRepository
 ) : ISongService
 {
-    public async Task<ResultObject<SongEntity>?> GetOrCreateSongAsync(string songUrl)
+    public async Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl)
     {
         var existing = await songsRepository.GetByUrlAsync(songUrl);
         if (existing.Type != ResultType.NotFound && existing.Data is not null) return existing;
@@ -27,7 +27,7 @@ public class SongService(
                 songUrl,
                 existing.Message
             );
-            return null;
+            return ResultObject<SongEntity>.InternalError("Failed to fetch song by URL");
         }
 
         var odesliResult = await odesli.GetSongInfoAsync(songUrl);
@@ -38,7 +38,7 @@ public class SongService(
                 songUrl,
                 odesliResult.Message
             );
-            return null;
+            return ResultObject<SongEntity>.InternalError("Failed to fetch song info from Odesli");
         }
 
         var odesliData = odesliResult.Data;
@@ -61,6 +61,6 @@ public class SongService(
             createResult.Message
         );
 
-        return null;
+        return ResultObject<SongEntity>.InternalError("Failed to create song entry");
     }
 }

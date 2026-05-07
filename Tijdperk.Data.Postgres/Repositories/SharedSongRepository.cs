@@ -54,4 +54,21 @@ public class SharedSongRepository(NpgsqlDataContext context) : ISharedSongReposi
 
         return ResultObject<SharedSongEntity>.Success(entity);
     }
+
+    public async Task<Result> ClearMessageIdsAsync(List<ulong> messageIds)
+    {
+        var sharedSongs = await context.SharedSongs
+            .Where(ss => ss.MessageId.HasValue && messageIds.Contains(ss.MessageId.Value))
+            .ToListAsync();
+
+        if (sharedSongs.Count == 0) return Result.Success();
+
+        foreach (var sharedSong in sharedSongs)
+        {
+            sharedSong.ClearMessageId();
+        }
+
+        await context.SaveChangesAsync();
+        return Result.Success();
+    }
 }

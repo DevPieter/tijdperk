@@ -27,7 +27,6 @@ public class InteractionHandler(
         {
             if (message.Channel.Id != options.Value.MusicChannelId) return;
             if (message.Author.IsBot) return;
-            await message.DeleteAsync();
 
             if (message.Author is not SocketGuildUser guildUser) return;
 
@@ -35,6 +34,7 @@ public class InteractionHandler(
             if (string.IsNullOrEmpty(url)) return;
 
             await message.Channel.TriggerTypingAsync();
+            await message.DeleteAsync();
 
             using var scope = services.CreateScope();
             var songShareService = scope.ServiceProvider.GetRequiredService<IDiscordSongShareService>();
