@@ -1,12 +1,6 @@
-﻿namespace Tijdperk.Service.Bot.Models.Odesli;
+﻿using Tijdperk.Logic.Models.Odesli;
 
-public record OdesliResponse(
-    string EntityUniqueId,
-    string UserCountry,
-    string PageUrl,
-    Dictionary<string, OdesliPlatformLink> LinksByPlatform,
-    Dictionary<string, OdesliEntity> EntitiesByUniqueId
-);
+namespace Tijdperk.Logic.Extensions;
 
 public static class OdesliResponseExtensions
 {
@@ -41,7 +35,7 @@ public static class OdesliResponseExtensions
         return formattedLinks;
     }
 
-    public static OdesliSongMeta? GetSongMeta(this OdesliResponse response)
+    public static OdesliSongMeta? ExtractSongMeta(this OdesliResponse response)
     {
         var songEntity = response.EntitiesByUniqueId.Values.FirstOrDefault(e =>
             e.Type == "song" &&

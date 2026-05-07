@@ -1,4 +1,4 @@
-﻿namespace Tijdperk.Service.Bot.Models.Odesli;
+﻿namespace Tijdperk.Logic.Models.Odesli;
 
 public record OdesliPlatformLink(
     string EntityUniqueId,

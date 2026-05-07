@@ -13,8 +13,7 @@ public class InteractionHandler(
     InteractionService interactions,
     IServiceProvider services,
     ILogger<InteractionHandler> logger,
-    IOptions<GuildOptions> options,
-    IMusicShareService musicShareService
+    IOptions<GuildOptions> options
 )
 {
     public async Task InitializeAsync()
@@ -36,7 +35,10 @@ public class InteractionHandler(
             if (string.IsNullOrEmpty(url)) return;
 
             await message.Channel.TriggerTypingAsync();
-            await musicShareService.ShareAsync(guildUser, url, comment);
+
+            using var scope = services.CreateScope();
+            var songShareService = scope.ServiceProvider.GetRequiredService<IDiscordSongShareService>();
+            await songShareService.ShareToChannelAsync(guildUser, url, comment);
         };
     }
 

@@ -11,7 +11,7 @@ namespace Tijdperk.Service.Bot.Interactions.Buttons;
 public class CastVoteMusicButton(
     ILogger<CastVoteMusicButton> logger,
     IOptions<GuildOptions> options,
-    IMusicShareService shareService
+    IDiscordSongShareService shareService
 ) : InteractionModuleBase<SocketInteractionContext>
 {
     [ComponentInteraction(MusicVoteConstants.CustomIdCapture)]

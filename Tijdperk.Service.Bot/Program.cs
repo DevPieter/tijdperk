@@ -3,6 +3,8 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Data.Postgres.Extensions;
+using Tijdperk.Logic.Services;
+using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot;
 using Tijdperk.Service.Bot.Options;
 using Tijdperk.Service.Bot.Services;
@@ -27,8 +29,10 @@ builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
 }));
 
 builder.Services.AddHttpClient<IOdesliService, OdesliService>();
+builder.Services.AddScoped<ISongService, SongService>();
+builder.Services.AddScoped<ISongShareService, SongShareService>();
 
-builder.Services.AddSingleton<IMusicShareService, MusicShareService>();
+builder.Services.AddScoped<IDiscordSongShareService, DiscordSongShareService>();
 
 builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
 builder.Services.AddSingleton<InteractionHandler>();

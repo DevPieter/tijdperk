@@ -22,6 +22,13 @@ public class SongEntity
     [MaxLength(500)]
     public string? AlbumCoverUrl { get; private init; }
 
+    // public List<
+
+    // public record PlatformLink(
+    //     string Platform,
+    //     string Url
+    // );
+
     public DateTime CreatedAt { get; private init; }
 
     private SongEntity()

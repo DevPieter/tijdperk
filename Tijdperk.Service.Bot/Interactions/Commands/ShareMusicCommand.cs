@@ -9,7 +9,7 @@ namespace Tijdperk.Service.Bot.Interactions.Commands;
 
 public class ShareMusicCommand(
     IOptions<GuildOptions> options,
-    IMusicShareService shareService
+    IDiscordSongShareService shareService
 ) : InteractionModuleBase<SocketInteractionContext>
 {
     [SlashCommand("share-music", "Share a song you like or want to recommend to others.")]
@@ -42,7 +42,7 @@ public class ShareMusicCommand(
 
         await Context.Interaction.DeferAsync(ephemeral: true);
 
-        if (!await shareService.ShareAsync(guildUser, link, comment))
+        if (!await shareService.ShareToChannelAsync(guildUser, link, comment))
         {
             await Context.Interaction.FollowupAsync(
                 "Failed to share the song. Please try again later.",
