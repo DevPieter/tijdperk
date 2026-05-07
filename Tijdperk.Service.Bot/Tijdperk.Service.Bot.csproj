@@ -11,4 +11,9 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Tijdperk.Data.Postgres\Tijdperk.Data.Postgres.csproj" />
+      <ProjectReference Include="..\Tijdperk.Logic\Tijdperk.Logic.csproj" />
+    </ItemGroup>
+
 </Project>
