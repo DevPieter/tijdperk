@@ -12,6 +12,6 @@ public interface ISharedSongVoteRepository
     Task<ResultObject<SharedSongVoteEntity>> GetByIdAsync(Guid id);
     Task<ResultObject<SharedSongVoteEntity>> GetByUserIdAndSharedSongIdAsync(ulong userId, Guid sharedSongId);
 
-    Task<ResultObject<SharedSongVoteEntity>> CreateAsync(CreateSharedSongVoteDto dto);
+    Task<ResultObject<SharedSongVoteEntity>> CreateAsync(Guid sharedSongId, CreateSharedSongVoteDto dto);
     Task<ResultObject<SharedSongVoteEntity>> UpdateAsync(Guid id, SongVoteLevel level);
 }
