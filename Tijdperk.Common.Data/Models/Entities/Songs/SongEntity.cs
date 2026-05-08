@@ -22,13 +22,7 @@ public class SongEntity
     [MaxLength(500)]
     public string? AlbumCoverUrl { get; private init; }
 
-    // TODO - Implement a way to keep track of platform links
-    // public List<
-
-    // public record PlatformLink(
-    //     string Platform,
-    //     string Url
-    // );
+    public ICollection<PlatformLinkEntity> PlatformLinks { get; private set; } = new List<PlatformLinkEntity>();
 
     public DateTime CreatedAt { get; private init; }
 

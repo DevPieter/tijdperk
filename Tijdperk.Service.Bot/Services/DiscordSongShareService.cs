@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Common.Data.Models.DTOs.SongVotes;
 using Tijdperk.Common.Data.Models.Entities.SongVotes;
+using Tijdperk.Logic.Extensions;
 using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Options;
@@ -92,7 +93,12 @@ public class DiscordSongShareService(
             user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl()
         );
 
-        // TODO - Place links
+        var links = song.GetFormattedLinks();
+
+        songEmbed.AddField("Listen on", links.Count > 0
+            ? string.Join(" | ", links)
+            : $"[Odesli]({song.OdesliUrl ?? song.Url}) | [Original Link]({song.Url})"
+        );
 
         if (!string.IsNullOrEmpty(comment)) songEmbed.AddField("Comment", $"```{comment}```");
 

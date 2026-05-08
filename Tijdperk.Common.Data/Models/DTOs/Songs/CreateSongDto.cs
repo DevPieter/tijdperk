@@ -5,5 +5,6 @@ public record CreateSongDto(
     string? OdesliUrl,
     string? Title,
     string? Artist,
-    string? AlbumCoverUrl
+    string? AlbumCoverUrl,
+    List<CreatePlatformLinkDto> PlatformLinks
 );

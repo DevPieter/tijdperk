@@ -19,6 +19,11 @@ public class SongRepository(NpgsqlDataContext context) : ISongRepository
             albumCoverUrl: dto.AlbumCoverUrl
         );
 
+        foreach (var pl in dto.PlatformLinks)
+        {
+            entity.PlatformLinks.Add(new PlatformLinkEntity(entity.Id, pl.Platform, pl.DisplayName, pl.Url));
+        }
+
         context.Songs.Add(entity);
         await context.SaveChangesAsync();
 
@@ -29,6 +34,7 @@ public class SongRepository(NpgsqlDataContext context) : ISongRepository
     {
         var song = await context.Songs
             .AsNoTracking()
+            // .Include(s => s.PlatformLinks)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         return song is null
@@ -40,6 +46,7 @@ public class SongRepository(NpgsqlDataContext context) : ISongRepository
     {
         var song = await context.Songs
             .AsNoTracking()
+            .Include(s => s.PlatformLinks)
             .FirstOrDefaultAsync(s => s.Url == url);
 
         return song is null

@@ -44,14 +44,17 @@ public class SongService(
         }
 
         var odesliData = odesliResult.Data;
+
         var meta = odesliData?.ExtractSongMeta();
+        var links = odesliData?.ExtractLinks();
 
         var createDto = new CreateSongDto(
             Url: songUrl,
             OdesliUrl: odesliData?.PageUrl,
             Title: meta?.Title ?? null,
             Artist: meta?.ArtistName ?? null,
-            AlbumCoverUrl: meta?.ThumbnailUrl ?? null
+            AlbumCoverUrl: meta?.ThumbnailUrl ?? null,
+            PlatformLinks: links ?? []
         );
 
         var createResult = await songRepository.CreateAsync(createDto);

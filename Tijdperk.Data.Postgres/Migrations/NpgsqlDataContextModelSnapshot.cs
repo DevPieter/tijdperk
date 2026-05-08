@@ -78,6 +78,40 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.ToTable("SongVotes");
                 });
 
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.PlatformLinkEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("SongEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SongEntityId");
+
+                    b.ToTable("PlatformLinks");
+                });
+
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -111,6 +145,18 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Songs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.PlatformLinkEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", null)
+                        .WithMany("PlatformLinks")
+                        .HasForeignKey("SongEntityId");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>
+                {
+                    b.Navigation("PlatformLinks");
                 });
 #pragma warning restore 612, 618
         }

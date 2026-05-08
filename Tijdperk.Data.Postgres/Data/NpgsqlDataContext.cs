@@ -8,6 +8,7 @@ namespace Tijdperk.Data.Postgres.Data;
 public class NpgsqlDataContext(DbContextOptions<NpgsqlDataContext> options) : DbContext(options)
 {
     public DbSet<SongEntity> Songs { get; set; }
+    public DbSet<PlatformLinkEntity> PlatformLinks { get; set; }
     public DbSet<SharedSongEntity> SharedSongs { get; set; }
     public DbSet<SongVoteEntity> SongVotes { get; set; }
 }
