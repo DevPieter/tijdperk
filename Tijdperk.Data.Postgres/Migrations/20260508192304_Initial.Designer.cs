@@ -12,8 +12,8 @@ using Tijdperk.Data.Postgres.Data;
 namespace Tijdperk.Data.Postgres.Migrations
 {
     [DbContext(typeof(NpgsqlDataContext))]
-    [Migration("20260508183441_Add_PlatformLink")]
-    partial class Add_PlatformLink
+    [Migration("20260508192304_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,8 @@ namespace Tijdperk.Data.Postgres.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SongId");
+
                     b.ToTable("SharedSongs");
                 });
 
@@ -78,6 +80,8 @@ namespace Tijdperk.Data.Postgres.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SongId");
+
                     b.ToTable("SongVotes");
                 });
 
@@ -97,9 +101,6 @@ namespace Tijdperk.Data.Postgres.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("SongEntityId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("SongId")
                         .HasColumnType("uuid");
 
@@ -110,7 +111,7 @@ namespace Tijdperk.Data.Postgres.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SongEntityId");
+                    b.HasIndex("SongId");
 
                     b.ToTable("PlatformLinks");
                 });
@@ -150,16 +151,46 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.ToTable("Songs");
                 });
 
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongs.SharedSongEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
+                        .WithMany("SharedSongs")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SongVotes.SongVoteEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
+                        .WithMany("SongVotes")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+                });
+
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.PlatformLinkEntity", b =>
                 {
-                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", null)
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
                         .WithMany("PlatformLinks")
-                        .HasForeignKey("SongEntityId");
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
                 });
 
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>
                 {
                     b.Navigation("PlatformLinks");
+
+                    b.Navigation("SharedSongs");
+
+                    b.Navigation("SongVotes");
                 });
 #pragma warning restore 612, 618
         }

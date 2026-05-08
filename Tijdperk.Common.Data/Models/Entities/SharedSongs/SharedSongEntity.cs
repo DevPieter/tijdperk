@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Tijdperk.Common.Data.Models.Entities.Songs;
 
 namespace Tijdperk.Common.Data.Models.Entities.SharedSongs;
 
@@ -8,6 +9,7 @@ public class SharedSongEntity
     public Guid Id { get; private init; }
 
     public Guid SongId { get; private init; }
+    public SongEntity Song { get; private init; } = null!;
 
     public ulong UserId { get; private init; }
     public ulong? MessageId { get; private set; }

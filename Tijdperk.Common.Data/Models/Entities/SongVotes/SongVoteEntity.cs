@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Tijdperk.Common.Core.Enums.Songs;
+using Tijdperk.Common.Data.Models.Entities.Songs;
 
 namespace Tijdperk.Common.Data.Models.Entities.SongVotes;
 
@@ -9,6 +10,7 @@ public class SongVoteEntity
     public Guid Id { get; private init; }
 
     public Guid SongId { get; private init; }
+    public SongEntity Song { get; private init; } = null!;
 
     public ulong UserId { get; private init; }
     public SongVoteLevel Level { get; private set; }

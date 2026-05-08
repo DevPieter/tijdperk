@@ -8,6 +8,7 @@ public class PlatformLinkEntity
     public Guid Id { get; private init; }
 
     public Guid SongId { get; private init; }
+    public SongEntity Song { get; private init; } = null!;
 
     [MaxLength(100)]
     public string Platform { get; private init; } = null!;
