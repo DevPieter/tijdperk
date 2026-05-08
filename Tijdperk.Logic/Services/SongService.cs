@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using Tijdperk.Common.Core.Enums.Common;
+using Tijdperk.Common.Core.Extensions;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Common.Data.Models.DTOs.Songs;
 using Tijdperk.Common.Data.Models.Entities.Songs;
 using Tijdperk.Common.Data.Repositories;
 using Tijdperk.Logic.Extensions;
+using Tijdperk.Logic.Models.Odesli;
 using Tijdperk.Logic.Services.Interfaces;
 
 namespace Tijdperk.Logic.Services;
@@ -27,18 +29,18 @@ public class SongService(
                 songUrl,
                 existing.Message
             );
-            return ResultObject<SongEntity>.InternalError("Failed to fetch song by URL");
+            return existing.Clone<SongEntity, SongEntity>();
         }
 
         var odesliResult = await odesli.GetSongInfoAsync(songUrl);
         if (odesliResult.IsError && odesliResult.Type != ResultType.NotFound)
         {
             logger.LogError(
-                "Error while fetching Odesli info for song {SongUrl}: {ErrorMessage}",
+                "Error while fetching song info from Odesli for url {SongUrl}: {ErrorMessage}",
                 songUrl,
                 odesliResult.Message
             );
-            return ResultObject<SongEntity>.InternalError("Failed to fetch song info from Odesli");
+            return odesliResult.Clone<OdesliResponse, SongEntity>();
         }
 
         var odesliData = odesliResult.Data;
@@ -61,6 +63,6 @@ public class SongService(
             createResult.Message
         );
 
-        return ResultObject<SongEntity>.InternalError("Failed to create song entry");
+        return createResult;
     }
 }

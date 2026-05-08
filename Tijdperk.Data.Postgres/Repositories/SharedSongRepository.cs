@@ -43,7 +43,7 @@ public class SharedSongRepository(NpgsqlDataContext context) : ISharedSongReposi
             .FirstOrDefaultAsync();
 
         return latestMessageId == 0
-            ? ResultObject<ulong>.NotFound("No message ID found for this song")
+            ? ResultObject<ulong>.NotFound("No message IDs found for this song.")
             : ResultObject<ulong>.Success(latestMessageId);
     }
 

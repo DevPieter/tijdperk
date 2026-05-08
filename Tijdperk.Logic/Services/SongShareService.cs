@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Tijdperk.Common.Core.Extensions;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Common.Data.Models.DTOs.SharedSongs;
 using Tijdperk.Common.Data.Models.Entities.SharedSongs;
@@ -30,7 +31,7 @@ public class SongShareService(
             messageId,
             createShareResult.Message
         );
-        return Result.InternalError("Failed to create shared song entry");
+        return createShareResult.ToResult();
     }
 
     public async Task<ResultObject<List<SharedSongEntity>>> GetBySongIdAsync(Guid songId)

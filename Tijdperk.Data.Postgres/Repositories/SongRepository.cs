@@ -32,7 +32,7 @@ public class SongRepository(NpgsqlDataContext context) : ISongRepository
             .FirstOrDefaultAsync(s => s.Id == id);
 
         return song is null
-            ? ResultObject<SongEntity>.NotFound()
+            ? ResultObject<SongEntity>.NotFound("Song not found.")
             : ResultObject<SongEntity>.Success(song);
     }
 
@@ -43,7 +43,7 @@ public class SongRepository(NpgsqlDataContext context) : ISongRepository
             .FirstOrDefaultAsync(s => s.Url == url);
 
         return song is null
-            ? ResultObject<SongEntity>.NotFound()
+            ? ResultObject<SongEntity>.NotFound("Song not found.")
             : ResultObject<SongEntity>.Success(song);
     }
 }
