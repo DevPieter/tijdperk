@@ -22,32 +22,6 @@ namespace Tijdperk.Data.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongVotes.SharedSongVoteEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("SharedSongId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SharedSongVotes");
-                });
-
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongs.SharedSongEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -61,18 +35,82 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("MessageId")
+                    b.Property<decimal?>("MessageId")
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<Guid>("SongId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("UserId")
                         .HasColumnType("numeric(20,0)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SongId");
+
                     b.ToTable("SharedSongs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SongVotes.SongVoteEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("SongVotes");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.PlatformLinkEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("PlatformLinks");
                 });
 
             modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>
@@ -108,6 +146,48 @@ namespace Tijdperk.Data.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Songs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SharedSongs.SharedSongEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
+                        .WithMany("SharedSongs")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.SongVotes.SongVoteEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
+                        .WithMany("SongVotes")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.PlatformLinkEntity", b =>
+                {
+                    b.HasOne("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", "Song")
+                        .WithMany("PlatformLinks")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Tijdperk.Common.Data.Models.Entities.Songs.SongEntity", b =>
+                {
+                    b.Navigation("PlatformLinks");
+
+                    b.Navigation("SharedSongs");
+
+                    b.Navigation("SongVotes");
                 });
 #pragma warning restore 612, 618
         }

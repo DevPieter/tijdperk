@@ -15,35 +15,43 @@ public class CastVoteMusicButton(
 ) : InteractionModuleBase<SocketInteractionContext>
 {
     [ComponentInteraction(MusicVoteConstants.CustomIdCapture)]
-    public async Task CastVote(string input)
+    public async Task CastVote(string levelStr, string songIdStr)
     {
         if (Context.Channel.Id != options.Value.MusicChannelId) return;
         if (Context.Interaction is not SocketMessageComponent component) return;
+        if (Context.User is not SocketGuildUser guildUser) return;
 
-        if (Context.User is not SocketGuildUser guildUser)
-        {
-            logger.LogWarning("Received a cast vote interaction from a non-guild user: {User}.", Context.User.Username);
-            return;
-        }
-
-        var level = input.ToMusicVoteLevel();
+        var level = levelStr.ToSongVoteLevel();
         if (level is null)
         {
-            logger.LogWarning("Invalid vote level input: {Input}", input);
-            await component.RespondAsync("Invalid vote level.", ephemeral: true);
+            logger.LogWarning("User {User} provided invalid vote level input: {Input}", guildUser.Username, levelStr);
+            await component.RespondAsync("Sorry, I didn't understand that vote level.", ephemeral: true);
             return;
         }
 
-        var success = await shareService.CastVoteAsync(guildUser, component.Message, level.Value);
+        var songId = Guid.TryParse(songIdStr, out var parsedSongId) ? parsedSongId : (Guid?)null;
+        if (songId is null)
+        {
+            logger.LogWarning("User {User} provided invalid song ID input: {Input}", guildUser.Username, songIdStr);
+            await component.RespondAsync("Sorry, I didn't understand the song ID.", ephemeral: true);
+            return;
+        }
+
+        var success = await shareService.CastVoteAsync(guildUser, songId.Value, level.Value);
         if (!success)
         {
             logger.LogWarning(
-                "Failed to cast vote for user {User} on message {MessageId}. Message may not be a shared song.",
+                "Failed to cast vote for user {User} on song {SongId} with level {Level}. Message ID: {MessageId}",
                 guildUser.Username,
+                songId,
+                level,
                 component.Message.Id
             );
 
-            await component.RespondAsync("Failed to cast vote. This message may not be a shared song.", ephemeral: true);
+            await component.RespondAsync(
+                "Failed to cast vote. This message may not be a shared song.",
+                ephemeral: true
+            );
             return;
         }
 

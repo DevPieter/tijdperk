@@ -12,8 +12,8 @@ public static class BuilderExtensions
     {
         services.AddDbContext<NpgsqlDataContext>(options => options.UseNpgsql(connectionString));
 
-        services.AddScoped<ISongsRepository, SongsRepository>();
+        services.AddScoped<ISongRepository, SongRepository>();
         services.AddScoped<ISharedSongRepository, SharedSongRepository>();
-        services.AddScoped<ISharedSongVoteRepository, SharedSongVoteRepository>();
+        services.AddScoped<ISongVoteRepository, SongVoteRepository>();
     }
 }

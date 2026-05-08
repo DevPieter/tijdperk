@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Tijdperk.Common.Data.Models.Entities.SharedSongs;
+using Tijdperk.Common.Data.Models.Entities.SongVotes;
 
 namespace Tijdperk.Common.Data.Models.Entities.Songs;
 
@@ -22,12 +24,9 @@ public class SongEntity
     [MaxLength(500)]
     public string? AlbumCoverUrl { get; private init; }
 
-    // public List<
-
-    // public record PlatformLink(
-    //     string Platform,
-    //     string Url
-    // );
+    public ICollection<PlatformLinkEntity> PlatformLinks { get; private set; } = new List<PlatformLinkEntity>();
+    public ICollection<SharedSongEntity> SharedSongs { get; private set; } = new List<SharedSongEntity>();
+    public ICollection<SongVoteEntity> SongVotes { get; private set; } = new List<SongVoteEntity>();
 
     public DateTime CreatedAt { get; private init; }
 
@@ -38,11 +37,13 @@ public class SongEntity
     public SongEntity(string url, string? odesliUrl, string? title, string? artist, string? albumCoverUrl)
     {
         Id = Guid.NewGuid();
+
         Url = url;
         OdesliUrl = odesliUrl;
         Title = title;
         Artist = artist;
         AlbumCoverUrl = albumCoverUrl;
+
         CreatedAt = DateTime.UtcNow;
     }
 }

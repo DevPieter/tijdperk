@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using Tijdperk.Common.Core.Enums.Common;
+using Tijdperk.Common.Core.Extensions;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Common.Data.Models.DTOs.Songs;
 using Tijdperk.Common.Data.Models.Entities.Songs;
 using Tijdperk.Common.Data.Repositories;
 using Tijdperk.Logic.Extensions;
+using Tijdperk.Logic.Models.Odesli;
 using Tijdperk.Logic.Services.Interfaces;
 
 namespace Tijdperk.Logic.Services;
@@ -12,12 +14,12 @@ namespace Tijdperk.Logic.Services;
 public class SongService(
     ILogger<SongService> logger,
     IOdesliService odesli,
-    ISongsRepository songsRepository
+    ISongRepository songRepository
 ) : ISongService
 {
-    public async Task<ResultObject<SongEntity>?> GetOrCreateSongAsync(string songUrl)
+    public async Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl)
     {
-        var existing = await songsRepository.GetByUrlAsync(songUrl);
+        var existing = await songRepository.GetByUrlAsync(songUrl);
         if (existing.Type != ResultType.NotFound && existing.Data is not null) return existing;
 
         if (existing.Type != ResultType.NotFound && existing.IsError)
@@ -27,32 +29,35 @@ public class SongService(
                 songUrl,
                 existing.Message
             );
-            return null;
+            return existing.Clone<SongEntity, SongEntity>();
         }
 
         var odesliResult = await odesli.GetSongInfoAsync(songUrl);
         if (odesliResult.IsError && odesliResult.Type != ResultType.NotFound)
         {
             logger.LogError(
-                "Error while fetching Odesli info for song {SongUrl}: {ErrorMessage}",
+                "Error while fetching song info from Odesli for url {SongUrl}: {ErrorMessage}",
                 songUrl,
                 odesliResult.Message
             );
-            return null;
+            return odesliResult.Clone<OdesliResponse, SongEntity>();
         }
 
         var odesliData = odesliResult.Data;
+
         var meta = odesliData?.ExtractSongMeta();
+        var links = odesliData?.ExtractLinks();
 
         var createDto = new CreateSongDto(
             Url: songUrl,
             OdesliUrl: odesliData?.PageUrl,
             Title: meta?.Title ?? null,
             Artist: meta?.ArtistName ?? null,
-            AlbumCoverUrl: meta?.ThumbnailUrl ?? null
+            AlbumCoverUrl: meta?.ThumbnailUrl ?? null,
+            PlatformLinks: links ?? []
         );
 
-        var createResult = await songsRepository.CreateAsync(createDto);
+        var createResult = await songRepository.CreateAsync(createDto);
         if (createResult is { IsSuccess: true, Data: not null }) return createResult;
 
         logger.LogError(
@@ -61,6 +66,6 @@ public class SongService(
             createResult.Message
         );
 
-        return null;
+        return createResult;
     }
 }

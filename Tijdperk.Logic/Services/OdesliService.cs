@@ -24,22 +24,24 @@ public class OdesliService(
             if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
             {
                 logger.LogWarning(
-                    "Odesli did not find any links for song {Song}. Response status code: {StatusCode}",
+                    "Odesli does not have data for song {Song}. Response status code: {StatusCode}",
                     songUrl,
                     response.StatusCode
                 );
-                return ResultObject<OdesliResponse>.NotFound("No links found for the provided song URL");
+                return ResultObject<OdesliResponse>.NotFound(
+                    "Odesli does not have any data for this song."
+                );
             }
 
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogError(
-                    "Failed to get Odesli for song {Song}. Response status code: {StatusCode}",
+                    "Odesli API returned an error for song {Song}. Status code: {StatusCode}",
                     songUrl,
                     response.StatusCode
                 );
                 return ResultObject<OdesliResponse>.InternalError(
-                    $"Odesli API returned status code {response.StatusCode}"
+                    "Odesli API returned an error."
                 );
             }
 
@@ -57,18 +59,18 @@ public class OdesliService(
                 content
             );
             return ResultObject<OdesliResponse>.InternalError(
-                "Failed to deserialize Odesli response"
+                "Failed to parse Odesli response."
             );
         }
         catch (Exception ex)
         {
             logger.LogError(
                 ex,
-                "An error occurred while getting Odesli for song {Song}.",
+                "An error occurred while fetching song info from Odesli for song {Song}",
                 songUrl
             );
             return ResultObject<OdesliResponse>.InternalError(
-                "An error occurred while fetching song info"
+                "An error occurred while fetching song info from Odesli."
             );
         }
     }

@@ -31,6 +31,7 @@ builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
 builder.Services.AddHttpClient<IOdesliService, OdesliService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddScoped<ISongShareService, SongShareService>();
+builder.Services.AddScoped<ISongVoteService, SongVoteService>();
 
 builder.Services.AddScoped<IDiscordSongShareService, DiscordSongShareService>();
 
