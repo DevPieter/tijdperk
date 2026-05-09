@@ -97,7 +97,7 @@ public class DiscordSongShareService(
 
         songEmbed.AddField("Listen on", links.Count > 0
             ? string.Join(" | ", links)
-            : $"[Odesli]({song.OdesliUrl ?? song.Url}) | [Original Link]({song.Url})"
+            : $"[Original Link]({song.Url})"
         );
 
         if (!string.IsNullOrEmpty(comment)) songEmbed.AddField("Comment", $"```{comment}```");
