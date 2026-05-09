@@ -30,30 +30,32 @@ public class InteractionHandler(
 
             if (message.Author is not SocketGuildUser guildUser) return;
 
-            var (url, comment) = TryExtractSongUrl(message.Content);
-            if (string.IsNullOrEmpty(url)) return;
-            if (string.IsNullOrWhiteSpace(comment)) comment = null;
-
-            await message.Channel.TriggerTypingAsync();
+            var songUrls = TryExtractSongUrls(message.Content).ToList();
+            if (songUrls.Count == 0) return;
 
             using var scope = services.CreateScope();
             var songShareService = scope.ServiceProvider.GetRequiredService<IDiscordSongShareService>();
-            await songShareService.ShareToChannelAsync(guildUser, url, comment);
+
+            foreach (var (url, comment) in songUrls)
+            {
+                await message.Channel.TriggerTypingAsync();
+                await songShareService.ShareToChannelAsync(guildUser, url, comment);
+            }
 
             await message.DeleteAsync();
         };
     }
 
     // TODO - Move to util and return a more structured result
-    private static (string url, string comment) TryExtractSongUrl(string messageContent)
+    private static IEnumerable<(string url, string comment)> TryExtractSongUrls(string messageContent)
     {
-        var words = messageContent.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var words = messageContent.Split([' ', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 
-        var url = words.FirstOrDefault(SongUtils.IsValidSongUrl);
-        if (url is null) return (string.Empty, string.Empty);
+        var urls = words.Where(SongUtils.IsValidSongUrl).ToHashSet();
+        if (urls.Count == 0) yield break;
 
-        var comment = string.Join(' ', words.Where(w => w != url)).Trim();
-        return (url, comment);
+        var comment = string.Join(' ', words.Where(w => !urls.Contains(w))).Trim();
+        foreach (var url in urls) yield return (url, comment);
     }
 
     private async Task HandleInteractionAsync(SocketInteraction interaction)
