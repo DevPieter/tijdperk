@@ -2,6 +2,16 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Service.Bot", "Tijdperk.Service.Bot\Tijdperk.Service.Bot.csproj", "{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Common.Data", "Tijdperk.Common.Data\Tijdperk.Common.Data.csproj", "{F2682BCB-4C12-49ED-81BB-B2C05337B5C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Data.Postgres", "Tijdperk.Data.Postgres\Tijdperk.Data.Postgres.csproj", "{95A7807D-6C68-4A52-B6E9-9976ECE50E2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Common.Core", "Tijdperk.Common.Core\Tijdperk.Common.Core.csproj", "{20E60BD1-ACBC-4ACF-9C70-B53129B99221}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{1FE33936-9B83-4E34-9AD4-EAA53FB987E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijdperk.Logic", "Tijdperk.Logic\Tijdperk.Logic.csproj", "{D812A35E-27E8-416A-9C34-B0C99AA1BA8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +22,25 @@ Global
 		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF3454FF-1C5C-4F7D-912C-2B3A2CF6D129}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2682BCB-4C12-49ED-81BB-B2C05337B5C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2682BCB-4C12-49ED-81BB-B2C05337B5C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2682BCB-4C12-49ED-81BB-B2C05337B5C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2682BCB-4C12-49ED-81BB-B2C05337B5C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95A7807D-6C68-4A52-B6E9-9976ECE50E2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95A7807D-6C68-4A52-B6E9-9976ECE50E2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95A7807D-6C68-4A52-B6E9-9976ECE50E2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95A7807D-6C68-4A52-B6E9-9976ECE50E2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20E60BD1-ACBC-4ACF-9C70-B53129B99221}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20E60BD1-ACBC-4ACF-9C70-B53129B99221}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20E60BD1-ACBC-4ACF-9C70-B53129B99221}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20E60BD1-ACBC-4ACF-9C70-B53129B99221}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D812A35E-27E8-416A-9C34-B0C99AA1BA8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D812A35E-27E8-416A-9C34-B0C99AA1BA8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D812A35E-27E8-416A-9C34-B0C99AA1BA8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D812A35E-27E8-416A-9C34-B0C99AA1BA8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{20E60BD1-ACBC-4ACF-9C70-B53129B99221} = {1FE33936-9B83-4E34-9AD4-EAA53FB987E5}
+		{F2682BCB-4C12-49ED-81BB-B2C05337B5C5} = {1FE33936-9B83-4E34-9AD4-EAA53FB987E5}
 	EndGlobalSection
 EndGlobal

@@ -9,6 +9,15 @@
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="3.19.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Tijdperk.Data.Postgres\Tijdperk.Data.Postgres.csproj" />
+      <ProjectReference Include="..\Tijdperk.Logic\Tijdperk.Logic.csproj" />
     </ItemGroup>
 
 </Project>

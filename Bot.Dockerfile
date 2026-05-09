@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
 
@@ -11,10 +11,19 @@ EXPOSE 8081
 # Metrics
 EXPOSE 9080
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Copy project
 COPY ["Tijdperk.Service.Bot/Tijdperk.Service.Bot.csproj", "Tijdperk.Service.Bot/"]
+
+# Copy dependencies
+COPY ["Tijdperk.Logic/Tijdperk.Logic.csproj", "Tijdperk.Logic/"]
+COPY ["Tijdperk.Data.Postgres/Tijdperk.Data.Postgres.csproj", "Tijdperk.Data.Postgres/"]
+COPY ["Tijdperk.Common.Data/Tijdperk.Common.Data.csproj", "Tijdperk.Common.Data/"]
+COPY ["Tijdperk.Common.Core/Tijdperk.Common.Core.csproj", "Tijdperk.Common.Core/"]
+
 RUN dotnet restore "Tijdperk.Service.Bot/Tijdperk.Service.Bot.csproj"
 COPY . .
 WORKDIR "/src/Tijdperk.Service.Bot"
