@@ -48,11 +48,11 @@ public static class SongVoteLevelExtensions
 
     public static string ToCustomId(this SongVoteLevel level) => level switch
     {
-        SongVoteLevel.Love => SongVoteConstants.CustomIdPrefix + "love",
-        SongVoteLevel.Like => SongVoteConstants.CustomIdPrefix + "like",
-        SongVoteLevel.Neutral => SongVoteConstants.CustomIdPrefix + "neutral",
-        SongVoteLevel.Dislike => SongVoteConstants.CustomIdPrefix + "dislike",
-        SongVoteLevel.Trash => SongVoteConstants.CustomIdPrefix + "trash",
+        SongVoteLevel.Love => SongVoteConstants.SongVotePrefix + "love",
+        SongVoteLevel.Like => SongVoteConstants.SongVotePrefix + "like",
+        SongVoteLevel.Neutral => SongVoteConstants.SongVotePrefix + "neutral",
+        SongVoteLevel.Dislike => SongVoteConstants.SongVotePrefix + "dislike",
+        SongVoteLevel.Trash => SongVoteConstants.SongVotePrefix + "trash",
         _ => ""
     };
 
