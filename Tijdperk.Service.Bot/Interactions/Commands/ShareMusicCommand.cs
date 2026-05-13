@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Service.Bot.Options;
@@ -30,10 +31,11 @@ public class ShareMusicCommand(
             return;
         }
 
-        if (!SongUtils.IsValidSongUrl(link))
+        var platform = SongUtils.GetPlatform(link);
+        if (platform is null)
         {
             await Context.Interaction.RespondAsync(
-                "Please provide a valid song URL.",
+                "Unsupported song platform. Please provide a link from a supported platform like Spotify or YouTube.",
                 ephemeral: true
             );
 
