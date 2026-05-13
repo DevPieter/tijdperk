@@ -3,5 +3,7 @@ namespace Tijdperk.Common.Core.Enums.Songs;
 public enum SongPlatform
 {
     Spotify,
-    YouTube
+    YouTube,
+    SoundCloud,
+    AppleMusic
 }

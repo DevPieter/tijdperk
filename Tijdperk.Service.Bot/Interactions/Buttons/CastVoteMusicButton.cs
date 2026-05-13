@@ -1,6 +1,7 @@
 ﻿using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
+using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot.Constants;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Options;
@@ -11,10 +12,11 @@ namespace Tijdperk.Service.Bot.Interactions.Buttons;
 public class CastVoteMusicButton(
     ILogger<CastVoteMusicButton> logger,
     IOptions<GuildOptions> options,
-    IDiscordSongShareService shareService
+    IDiscordSongShareService shareService,
+    ISongService songService
 ) : InteractionModuleBase<SocketInteractionContext>
 {
-    [ComponentInteraction(MusicVoteConstants.CustomIdCapture)]
+    [ComponentInteraction(SongVoteConstants.SongVoteCapture)]
     public async Task CastVote(string levelStr, string songIdStr)
     {
         if (Context.Channel.Id != options.Value.MusicChannelId) return;
@@ -56,5 +58,33 @@ public class CastVoteMusicButton(
         }
 
         await component.DeferAsync();
+    }
+
+    [ComponentInteraction(SongVoteConstants.SongEmbedCapture)]
+    public async Task ShowEmbed(string songIdStr)
+    {
+        if (Context.Channel.Id != options.Value.MusicChannelId) return;
+        if (Context.Interaction is not SocketMessageComponent component) return;
+        if (Context.User is not SocketGuildUser guildUser) return;
+
+        var songId = Guid.TryParse(songIdStr, out var parsedSongId) ? parsedSongId : (Guid?)null;
+        if (songId is null)
+        {
+            logger.LogWarning("User {User} provided invalid song ID input: {Input}", guildUser.Username, songIdStr);
+            await component.RespondAsync("Sorry, I didn't understand the song ID.", ephemeral: true);
+            return;
+        }
+
+        var songResult = await songService.GetSongByIdAsync(songId.Value);
+        if (songResult.IsError || songResult.Data is null)
+        {
+            logger.LogWarning("Failed to fetch song for embed. User: {User}, SongId: {SongId}, Error: {ErrorMessage}",
+                guildUser.Username, songId, songResult.Message);
+            await component.RespondAsync("Sorry, I couldn't fetch the song details.", ephemeral: true);
+            return;
+        }
+
+        var song = songResult.Data;
+        await component.RespondAsync(song.Url, ephemeral: true);
     }
 }

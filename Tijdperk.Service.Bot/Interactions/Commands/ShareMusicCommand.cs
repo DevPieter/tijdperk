@@ -31,14 +31,14 @@ public class ShareMusicCommand(
             return;
         }
 
-        var platform = SongUtils.GetPlatform(link);
-        if (platform is null)
+        var isValidUrl = SongUtils.IsValidSongUrl(link);
+        if (!isValidUrl)
         {
+            // TODO - Provide more specific feedback about supported platforms
             await Context.Interaction.RespondAsync(
-                "Unsupported song platform. Please provide a link from a supported platform like Spotify or YouTube.",
+                "Invalid song URL.",
                 ephemeral: true
             );
-
             return;
         }
 
@@ -59,44 +59,4 @@ public class ShareMusicCommand(
             ephemeral: true
         );
     }
-
-    // [SlashCommand("remove-shared-music", "Remove a song you previously shared.")]
-    // public async Task RemoveSharedMusic(
-    //     [Summary("message-id", "The ID of the message containing the shared song.")]
-    //     string messageId
-    // )
-    // {
-    //     if (Context.User is not SocketGuildUser guildUser)
-    //     {
-    //         await Context.Interaction.RespondAsync(
-    //             "This command can only be used within a server.",
-    //             ephemeral: true
-    //         );
-    //         return;
-    //     }
-    //
-    //     // TODO - Find a better way of using IDs
-    //     if (!ulong.TryParse(messageId, out var parsedMessageId))
-    //     {
-    //         await Context.Interaction.RespondAsync(
-    //             "Please provide a valid message ID.",
-    //             ephemeral: true
-    //         );
-    //         return;
-    //     }
-    //
-    //     if (!await shareService.RemoveShareAsync(guildUser, parsedMessageId))
-    //     {
-    //         await Context.Interaction.RespondAsync(
-    //             "Failed to remove the shared song. Please ensure you provided the correct message ID and try again.",
-    //             ephemeral: true
-    //         );
-    //         return;
-    //     }
-    //
-    //     await Context.Interaction.RespondAsync(
-    //         "Shared song removed successfully.",
-    //         ephemeral: true
-    //     );
-    // }
 }
