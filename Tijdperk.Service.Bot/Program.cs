@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Options;
 using Tijdperk.Data.Postgres.Extensions;
 using Tijdperk.Logic.Services;
 using Tijdperk.Logic.Services.Interfaces;
@@ -12,6 +11,11 @@ using Tijdperk.Service.Bot.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.ConfigureHostOptions(options =>
+{
+    options.ShutdownTimeout = TimeSpan.FromSeconds(20);
+});
+
 builder.Services.Configure<BotOptions>(builder.Configuration.GetSection("Discord:Bot"));
 builder.Services.Configure<GuildOptions>(builder.Configuration.GetSection("Discord:Guild"));
 
@@ -19,7 +23,6 @@ var connectionString = builder.Configuration.GetConnectionString("Postgres");
 if (string.IsNullOrEmpty(connectionString)) throw new InvalidOperationException("Connection string is not configured.");
 
 builder.Services.UseNpgsqlContext(connectionString);
-// docker run --name tijdperk_postgres -e POSTGRES_USER=tijdperk_postgres -e POSTGRES_DB=tijdperk_postgres -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 -d postgres
 
 builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
 {
@@ -38,17 +41,11 @@ builder.Services.AddScoped<IDiscordSongShareService, DiscordSongShareService>();
 builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
 builder.Services.AddSingleton<InteractionHandler>();
 
+builder.Services.AddHostedService<DiscordHostedService>();
+
 var app = builder.Build();
 
 await app.Services.MigrateNpgsqlContext();
 await app.Services.GetRequiredService<InteractionHandler>().InitializeAsync();
-
-var options = app.Services.GetRequiredService<IOptions<BotOptions>>().Value;
-
-var client = app.Services.GetRequiredService<DiscordSocketClient>();
-await client.LoginAsync(TokenType.Bot, options.Token);
-await client.StartAsync();
-
-if (!string.IsNullOrEmpty(options.CustomStatus)) await client.SetCustomStatusAsync(options.CustomStatus);
 
 app.Run();
