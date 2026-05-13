@@ -5,5 +5,7 @@ namespace Tijdperk.Logic.Services.Interfaces;
 
 public interface ISongService
 {
+    Task<ResultObject<SongEntity>> GetSongByIdAsync(Guid songId);
+    
     Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl);
 }

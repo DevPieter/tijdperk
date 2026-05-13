@@ -6,9 +6,11 @@ using Tijdperk.Common.Data.Models.DTOs.SongVotes;
 using Tijdperk.Common.Data.Models.Entities.SongVotes;
 using Tijdperk.Logic.Extensions;
 using Tijdperk.Logic.Services.Interfaces;
+using Tijdperk.Service.Bot.Constants;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Options;
 using Tijdperk.Service.Bot.Services.Interfaces;
+using Tijdperk.Service.Bot.Utils;
 
 namespace Tijdperk.Service.Bot.Services;
 
@@ -21,8 +23,32 @@ public class DiscordSongShareService(
     ISongVoteService voteService
 ) : IDiscordSongShareService
 {
-    public async Task<bool> ShareToChannelAsync(SocketGuildUser user, string songUrl, string? comment)
+    public async Task<bool> ShareToChannelAsync(SocketGuildUser user, string rawSongUrl, string? comment)
     {
+        var platform = SongUtils.GetPlatform(rawSongUrl);
+        if (platform is null)
+        {
+            logger.LogError(
+                "Failed to determine platform for URL {SongUrl}.",
+                rawSongUrl
+            );
+            return false;
+        }
+
+        var songId = platform.Value.ExtractId(rawSongUrl);
+        var normalizedUrl = platform.Value.NormalizeUrl(rawSongUrl);
+
+        if (string.IsNullOrEmpty(songId) || string.IsNullOrEmpty(normalizedUrl))
+        {
+            logger.LogError(
+                "Failed to extract song ID or normalize URL for {SongUrl}. Extracted ID: {SongId}, Normalized URL: {NormalizedUrl}",
+                rawSongUrl,
+                songId,
+                normalizedUrl
+            );
+            return false;
+        }
+
         if (client.GetChannel(options.Value.MusicChannelId) is not ITextChannel channel)
         {
             logger.LogError(
@@ -32,12 +58,12 @@ public class DiscordSongShareService(
             return false;
         }
 
-        var songResult = await songService.GetOrCreateSongAsync(songUrl);
+        var songResult = await songService.GetOrCreateSongAsync(normalizedUrl);
         if (songResult.IsError || songResult.Data is null)
         {
             logger.LogError(
                 "Failed to get or create song for URL {SongUrl}: {ErrorMessage}",
-                songUrl,
+                normalizedUrl,
                 songResult.Message
             );
             return false;
@@ -107,9 +133,13 @@ public class DiscordSongShareService(
             .WithButton(SongVoteLevel.Like.ToButton(song.Id))
             .WithButton(SongVoteLevel.Neutral.ToButton(song.Id))
             .WithButton(SongVoteLevel.Dislike.ToButton(song.Id))
-            .WithButton(SongVoteLevel.Trash.ToButton(song.Id));
+            .WithButton(SongVoteLevel.Trash.ToButton(song.Id))
+            .WithButton("Preview", $"{SongVoteConstants.SongEmbedPrefix}{song.Id}", row: 1);
 
-        var message = await channel.SendMessageAsync(embed: songEmbed.Build(), components: builder.Build());
+        var message = await channel.SendMessageAsync(
+            embed: songEmbed.Build(),
+            components: builder.Build()
+        );
 
         var registerResult = await shareService.RegisterShareAsync(
             song: song,
@@ -133,7 +163,7 @@ public class DiscordSongShareService(
         logger.LogError(
             "Failed to register song share for user {UserId} and song {SongUrl}: {ErrorMessage}",
             user.Id,
-            songUrl,
+            normalizedUrl,
             registerResult.Message
         );
 
