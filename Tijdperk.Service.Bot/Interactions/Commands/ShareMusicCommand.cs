@@ -8,6 +8,7 @@ using Tijdperk.Service.Bot.Utils;
 namespace Tijdperk.Service.Bot.Interactions.Commands;
 
 public class ShareMusicCommand(
+    ILogger<ShareMusicCommand> logger,
     IOptions<GuildOptions> options,
     IDiscordSongShareService shareService
 ) : InteractionModuleBase<SocketInteractionContext>
@@ -26,7 +27,6 @@ public class ShareMusicCommand(
                 "This command can only be used within a server.",
                 ephemeral: true
             );
-
             return;
         }
 
@@ -45,11 +45,17 @@ public class ShareMusicCommand(
 
         if (!await shareService.ShareToChannelAsync(guildUser, link, comment))
         {
+            logger.LogError(
+                "Failed to share song for user {User}. Link: {Link}. Comment: {Comment}",
+                guildUser.Username,
+                link,
+                comment
+            );
+
             await Context.Interaction.FollowupAsync(
                 "Failed to share the song. Please try again later.",
                 ephemeral: true
             );
-
             return;
         }
 

@@ -26,26 +26,40 @@ public class CastVoteMusicButton(
         var level = levelStr.ToSongVoteLevel();
         if (level is null)
         {
-            logger.LogWarning("User {User} provided invalid vote level input: {Input}", guildUser.Username, levelStr);
-            await component.RespondAsync("Sorry, I didn't understand that vote level.", ephemeral: true);
+            logger.LogWarning(
+                "User {User} provided invalid vote level input: {Input}",
+                guildUser.Username,
+                levelStr);
+
+            await component.RespondAsync(
+                "Sorry, I didn't understand that vote level.",
+                ephemeral: true
+            );
             return;
         }
 
-        var songId = Guid.TryParse(songIdStr, out var parsedSongId) ? parsedSongId : (Guid?)null;
-        if (songId is null)
+        if (!Guid.TryParse(songIdStr, out var parsedSongId) || parsedSongId == Guid.Empty)
         {
-            logger.LogWarning("User {User} provided invalid song ID input: {Input}", guildUser.Username, songIdStr);
-            await component.RespondAsync("Sorry, I didn't understand the song ID.", ephemeral: true);
+            logger.LogWarning(
+                "User {User} provided invalid song ID input: {Input}",
+                guildUser.Username,
+                songIdStr
+            );
+
+            await component.RespondAsync(
+                "Sorry, I didn't understand the song ID.",
+                ephemeral: true
+            );
             return;
         }
 
-        var success = await shareService.CastVoteAsync(guildUser, songId.Value, level.Value);
+        var success = await shareService.CastVoteAsync(guildUser, parsedSongId, level.Value);
         if (!success)
         {
             logger.LogWarning(
                 "Failed to cast vote for user {User} on song {SongId} with level {Level}. Message ID: {MessageId}",
                 guildUser.Username,
-                songId,
+                parsedSongId,
                 level,
                 component.Message.Id
             );
@@ -67,24 +81,41 @@ public class CastVoteMusicButton(
         if (Context.Interaction is not SocketMessageComponent component) return;
         if (Context.User is not SocketGuildUser guildUser) return;
 
-        var songId = Guid.TryParse(songIdStr, out var parsedSongId) ? parsedSongId : (Guid?)null;
-        if (songId is null)
+        if (!Guid.TryParse(songIdStr, out var parsedSongId) || parsedSongId == Guid.Empty)
         {
-            logger.LogWarning("User {User} provided invalid song ID input: {Input}", guildUser.Username, songIdStr);
-            await component.RespondAsync("Sorry, I didn't understand the song ID.", ephemeral: true);
+            logger.LogWarning(
+                "User {User} provided invalid song ID input: {Input}",
+                guildUser.Username,
+                songIdStr
+            );
+
+            await component.RespondAsync(
+                "Sorry, I didn't understand the song ID.",
+                ephemeral: true
+            );
             return;
         }
 
-        var songResult = await songService.GetSongByIdAsync(songId.Value);
+        var songResult = await songService.GetSongByIdAsync(parsedSongId);
         if (songResult.IsError || songResult.Data is null)
         {
-            logger.LogWarning("Failed to fetch song for embed. User: {User}, SongId: {SongId}, Error: {ErrorMessage}",
-                guildUser.Username, songId, songResult.Message);
-            await component.RespondAsync("Sorry, I couldn't fetch the song details.", ephemeral: true);
+            logger.LogWarning(
+                "Failed to fetch song for embed. User: {User}, SongId: {SongId}, Error: {ErrorMessage}",
+                guildUser.Username,
+                parsedSongId,
+                songResult.Message
+            );
+
+            await component.RespondAsync(
+                "Sorry, I couldn't fetch the song details.",
+                ephemeral: true
+            );
             return;
         }
 
-        var song = songResult.Data;
-        await component.RespondAsync(song.Url, ephemeral: true);
+        await component.RespondAsync(
+            songResult.Data.Url,
+            ephemeral: true
+        );
     }
 }
