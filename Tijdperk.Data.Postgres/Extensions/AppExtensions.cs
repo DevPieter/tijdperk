@@ -11,7 +11,13 @@ public static class AppExtensions
         using var scope = services.CreateScope();
 
         var context = scope.ServiceProvider.GetRequiredService<NpgsqlDataContext>();
-        if (!await context.Database.CanConnectAsync()) return;
+        if (!await context.Database.CanConnectAsync())
+        {
+            throw new Exception(
+                "Unable to connect to the database. Please check your connection settings and ensure the database server is running."
+            );
+        }
+
 
         await context.Database.MigrateAsync();
     }

@@ -4,7 +4,7 @@ using Tijdperk.Common.Data.Models.Entities.Songs;
 
 namespace Tijdperk.Common.Data.Repositories;
 
-public interface ISongRepository // TODO - Rename to ISongRepository
+public interface ISongRepository
 {
     // TODO - Check if it is better to return a DTO instead of the entity.
     Task<ResultObject<SongEntity>> CreateAsync(CreateSongDto dto);

@@ -56,16 +56,6 @@ public static class SongVoteLevelExtensions
         _ => ""
     };
 
-    public static int ToWeight(this SongVoteLevel level) => level switch
-    {
-        SongVoteLevel.Love => 2,
-        SongVoteLevel.Like => 1,
-        SongVoteLevel.Neutral => 0,
-        SongVoteLevel.Dislike => -1,
-        SongVoteLevel.Trash => -2,
-        _ => 0
-    };
-
     public static SongVoteLevel? ToSongVoteLevel(this string emoji) => emoji switch
     {
         "🔥" or "love" => SongVoteLevel.Love,
