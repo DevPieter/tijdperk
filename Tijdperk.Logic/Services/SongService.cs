@@ -32,6 +32,21 @@ public class SongService(
         return result;
     }
 
+    public async Task<ResultObject<SongEntity>> GetSongAsync(string songUrl)
+    {
+        var result = await songRepository.GetByUrlAsync(songUrl);
+        if (result.IsError)
+        {
+            logger.LogError(
+                "Error while fetching song by url {SongUrl}: {ErrorMessage}",
+                songUrl,
+                result.Message
+            );
+        }
+
+        return result;
+    }
+
     public async Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl)
     {
         var existing = await songRepository.GetByUrlAsync(songUrl);
