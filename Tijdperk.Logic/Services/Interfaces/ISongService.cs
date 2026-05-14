@@ -7,5 +7,6 @@ public interface ISongService
 {
     Task<ResultObject<SongEntity>> GetSongByIdAsync(Guid songId);
     
+    Task<ResultObject<SongEntity>> GetSongAsync(string songUrl);
     Task<ResultObject<SongEntity>> GetOrCreateSongAsync(string songUrl);
 }

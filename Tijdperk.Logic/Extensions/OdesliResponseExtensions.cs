@@ -14,11 +14,7 @@ public static class OdesliResponseExtensions
             "spotify",
             "appleMusic",
             "youtube",
-            "soundcloud",
-            "deezer",
-            "tidal",
-            "amazonMusic",
-            "pandora"
+            "soundcloud"
         };
 
         foreach (var platform in priorityPlatforms)
