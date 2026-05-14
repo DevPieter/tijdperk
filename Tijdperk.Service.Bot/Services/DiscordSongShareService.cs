@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using Microsoft.Extensions.Options;
 using Tijdperk.Common.Core.Enums.Songs;
+using Tijdperk.Common.Core.Extensions;
 using Tijdperk.Common.Data.Models.DTOs.SongVotes;
 using Tijdperk.Common.Data.Models.Entities.SongVotes;
 using Tijdperk.Logic.Extensions;
@@ -184,34 +185,6 @@ public class DiscordSongShareService(
         return false;
     }
 
-    // var odesli = await odesliService.GetOdesliAsync(songUrl);
-    // if (odesli is not null)
-    // {
-    //     songEmbed.WithUrl(odesli.PageUrl);
-    //
-    //     var meta = odesli.GetSongMeta();
-    //     if (meta is not null)
-    //     {
-    //         songEmbed.WithTitle(string.IsNullOrEmpty(meta.ArtistName)
-    //             ? meta.Title
-    //             : $"{meta.Title} - {meta.ArtistName}"
-    //         );
-    //
-    //         if (!string.IsNullOrEmpty(meta.ThumbnailUrl)) songEmbed.WithImageUrl(meta.ThumbnailUrl);
-    //     }
-    //
-    //     var links = odesli.GetFormattedLinks();
-    //     songEmbed.AddField("Listen on", links.Count > 0
-    //         ? string.Join(" | ", links)
-    //         : $"[Odesli]({odesli.PageUrl}) | [Original Link]({songUrl})"
-    //     );
-    // }
-
-    public async Task<bool> RemoveShareAsync(SocketGuildUser user, ulong messageId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<bool> CastVoteAsync(SocketGuildUser user, Guid songId, SongVoteLevel level)
     {
         var voteResult = await voteService.CreateOrUpdateAsync(songId, new CreateSongVoteDto(
@@ -304,9 +277,10 @@ public class DiscordSongShareService(
     {
         votes ??= [];
 
-        var winningLevel = CalculateWinningLevel(votes);
-        embed.WithColor(winningLevel.ToColor());
+        var levels = votes.Select(v => v.Level).ToList();
+        var winningLevel = levels.CalculateLevel();
 
+        embed.WithColor(winningLevel.ToColor());
         embed.WithAuthor(votes.Count > 0
             ? $"{winningLevel.ToEmoji()} {winningLevel.ToPastTenseDisplayName()}"
             : "🫣 No votes yet"
@@ -321,20 +295,5 @@ public class DiscordSongShareService(
         embed.WithDescription(
             $"`{loveCount} 🔥` | `{likeCount} 👍` | `{neutralCount} 😐` | `{dislikeCount} 👎` | `{trashCount} 💩`"
         );
-    }
-
-    private static SongVoteLevel CalculateWinningLevel(List<SongVoteEntity> votes)
-    {
-        if (votes.Count == 0) return SongVoteLevel.Neutral;
-        var averageScore = votes.Average(v => v.Level.ToWeight());
-
-        return averageScore switch
-        {
-            >= 1.5 => SongVoteLevel.Love,
-            >= 0.5 => SongVoteLevel.Like,
-            > -0.5 => SongVoteLevel.Neutral,
-            > -1.5 => SongVoteLevel.Dislike,
-            _ => SongVoteLevel.Trash
-        };
     }
 }
