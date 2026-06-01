@@ -2,15 +2,33 @@
 using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Service.Bot.Extensions;
 
-namespace Tijdperk.Service.Bot.Services;
+namespace Tijdperk.Service.Bot.Services.Drawing;
 
-public class CoverGenerator(HttpClient client)
+public class CoverGenerator(
+    HttpClient client,
+    IAvatarDrawer avatarDrawer
+)
 {
-    public async Task<MemoryStream> GenerateCoverImage(string title, string author, string coverUrl,
-        SongVoteLevel level)
+    public record UserVote(
+        string AvatarUrl,
+        SongVoteLevel Level
+    );
+
+    public async Task<MemoryStream> GenerateCoverImage(
+        string title,
+        string author,
+        string coverUrl,
+        SongVoteLevel level,
+        UserVote sender,
+        List<UserVote> avatarUrls
+    )
     {
-        const int width = 900;
-        const int height = 300;
+        // const int width = 900;
+        // const int height = 300;
+        // const int padding = 32;
+
+        const int width = 1200;
+        const int height = 350;
         const int padding = 32;
 
         const int coverSize = height - padding * 2;
@@ -86,13 +104,13 @@ public class CoverGenerator(HttpClient client)
         var textWidth = width - textX - padding;
 
         using var titleTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
-        using var titleFont = new SKFont(titleTypeface, 36);
+        using var titleFont = new SKFont(titleTypeface, 38);
         using var titlePaint = new SKPaint();
         titlePaint.Color = SKColors.White;
         titlePaint.IsAntialias = true;
 
         using var authorTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal);
-        using var authorFont = new SKFont(authorTypeface, 24);
+        using var authorFont = new SKFont(authorTypeface, 26);
         using var authorPaint = new SKPaint();
         authorPaint.Color = new SKColor(220, 220, 220);
         authorPaint.IsAntialias = true;
@@ -122,11 +140,44 @@ public class CoverGenerator(HttpClient client)
 
         DrawEmojiCluster(canvas, new SKRect(0, 0, width, height), voteEffect);
 
+        var drawableSenderAvatar = new DrawableAvatar(
+            sender.AvatarUrl,
+            GetVoteEffect(sender.Level).Primary.WithAlpha(210)
+        );
+
+        await avatarDrawer.DrawAvatarAsync(
+            canvas,
+            new SKPoint(coverRect.Right - 12, coverRect.Top + 12),
+            drawableSenderAvatar,
+            size: 48
+        );
+
+        if (avatarUrls is { Count: > 0 })
+        {
+            var drawableAvatars = avatarUrls
+                .Select(uv => new DrawableAvatar(uv.AvatarUrl, GetVoteEffect(uv.Level).Primary.WithAlpha(210)))
+                .ToList();
+
+            var avatarSize = 64f;
+            var avatarOverlap = 24f;
+            var avatarPadding = 16;
+
+            await avatarDrawer.DrawClusterAsync(
+                canvas,
+                new SKPoint(width - avatarPadding - avatarSize / 2f, avatarPadding + avatarSize / 2f),
+                drawableAvatars,
+                size: avatarSize,
+                overlap: avatarOverlap,
+                reversed: true
+            );
+        }
+
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 
         return new MemoryStream(data.ToArray());
     }
+
 
     private static void DrawEmojiCluster(SKCanvas canvas, SKRect coverRect, VoteEffect voteEffect)
     {

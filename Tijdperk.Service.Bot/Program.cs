@@ -8,6 +8,7 @@ using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot;
 using Tijdperk.Service.Bot.Options;
 using Tijdperk.Service.Bot.Services;
+using Tijdperk.Service.Bot.Services.Drawing;
 using Tijdperk.Service.Bot.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
     MessageCacheSize = 100,
 }));
 
+builder.Services.AddHttpClient<IAvatarDrawer, AvatarDrawer>();
 builder.Services.AddHttpClient<CoverGenerator>();
 
 builder.Services.AddHttpClient<IOdesliService, OdesliService>();
@@ -132,19 +134,19 @@ var songs = new List<SongHolder>();
 
 /* =============================================== */
 
-songs.Add(new SongHolder(
-    "Het Ergste Moet Nog Komen (Outro)",
-    "Sefa",
-    "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg",
-    SongVoteLevel.Trash
-));
-
-songs.Add(new SongHolder(
-    "Het Ergste Moet Nog Komen (Outro)",
-    "Sefa",
-    "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg",
-    SongVoteLevel.Neutral
-));
+// songs.Add(new SongHolder(
+//     "Het Ergste Moet Nog Komen (Outro)",
+//     "Sefa",
+//     "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg",
+//     SongVoteLevel.Trash
+// ));
+//
+// songs.Add(new SongHolder(
+//     "Het Ergste Moet Nog Komen (Outro)",
+//     "Sefa",
+//     "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg",
+//     SongVoteLevel.Neutral
+// ));
 
 songs.Add(new SongHolder(
     "Het Ergste Moet Nog Komen (Outro)",
@@ -159,7 +161,33 @@ foreach (var song in songs)
         song.name,
         song.author,
         song.url,
-        song.voteLevel
+        song.voteLevel,
+        new CoverGenerator.UserVote(
+            "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128",
+            SongVoteLevel.Love
+        ),
+        [
+            new CoverGenerator.UserVote(
+                "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128",
+                SongVoteLevel.Love
+            ),
+            new CoverGenerator.UserVote(
+                "https://cdn.discordapp.com/avatars/360790692949393410/29ee2a707b057b873f87f478d97aa488.webp?size=128",
+                SongVoteLevel.Love
+            ),
+            new CoverGenerator.UserVote(
+                "https://cdn.discordapp.com/avatars/724694495395840030/75946b85a5775694131c2c128979bbb7.webp?size=128",
+                SongVoteLevel.Like
+            ),
+            new CoverGenerator.UserVote(
+                "https://cdn.discordapp.com/avatars/1117754055104671795/a6aa9b2547fe92dd482064c66a918518.webp?size=128",
+                SongVoteLevel.Neutral
+            ),
+            new CoverGenerator.UserVote(
+                "https://cdn.discordapp.com/avatars/699322765114867764/937caec5a8c6eb66bcef18cddd4a2be5.webp?size=128",
+                SongVoteLevel.Dislike
+            )
+        ]
     );
 
     var outputPath = "C:\\Users\\devpi\\Desktop\\tijdperk\\" + Guid.NewGuid() + ".png";
@@ -168,4 +196,4 @@ foreach (var song in songs)
 }
 
 
-app.Run();
+// app.Run();
