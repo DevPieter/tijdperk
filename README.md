@@ -20,6 +20,11 @@ Tijdperk is organized into the following projects:
 - `Tijdperk.Service.Bot`
     - -> `Tijdperk.Logic`
     - -> `Tijdperk.Data.Postgres`
+
+- `Tijdperk.Service.ImageGeneration`
+  - -> `Tijdperk.Logic`
+  - -> `Tijdperk.Data.Postgres`
+
 - `Tijdperk.Logic` -> `Tijdperk.Common.Data`
 - `Tijdperk.Data.Postgres` -> `Tijdperk.Common.Data`
 - `Tijdperk.Common.Data` -> `Tijdperk.Common.Core`

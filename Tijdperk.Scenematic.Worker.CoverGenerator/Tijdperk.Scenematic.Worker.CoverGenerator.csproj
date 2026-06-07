@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Tijdperk.Scenematic.Data.Postgres\Tijdperk.Scenematic.Data.Postgres.csproj" />
+      <ProjectReference Include="..\Tijdperk.Scenematic.Logic\Tijdperk.Scenematic.Logic.csproj" />
+      <ProjectReference Include="..\Tijdperk.Scenematic.Queue.Redis\Tijdperk.Scenematic.Queue.Redis.csproj" />
+    </ItemGroup>
+
+</Project>
