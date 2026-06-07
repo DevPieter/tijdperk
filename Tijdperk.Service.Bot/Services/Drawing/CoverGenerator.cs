@@ -30,11 +30,11 @@ public class CoverGenerator(
 
         const int coverSize = height - padding * 2;
         const float coverCornerRadius = 18f;
-        var animationProgress = NormalizeProgress(progress);
         var voteEffect = GetVoteEffect(level);
 
+        // using var coverStream = await DownloadCoverImageAsync(coverUrl);
+        // using var coverBitmap = SKBitmap.Decode(coverStream);
         var coverBitmap = await DownloadCoverImageAsync(coverUrl);
-
         using var coverImage = SKImage.FromBitmap(coverBitmap);
         var samplingOptions = new SKSamplingOptions(SKCubicResampler.Mitchell);
 
@@ -72,15 +72,31 @@ public class CoverGenerator(
 
         DrawVoteEffect(canvas, width, height, coverRect, voteEffect);
 
-        DrawAnimatedCoverCard(
-            canvas,
-            coverImage,
-            coverRect,
-            coverCornerRadius,
-            samplingOptions,
-            voteEffect,
-            animationProgress
-        );
+        using (var coverPath = new SKPath())
+        {
+            coverPath.AddRoundRect(coverRect, coverCornerRadius, coverCornerRadius);
+
+            canvas.Save();
+            canvas.ClipPath(coverPath, antialias: true);
+
+            using (var coverPaint = new SKPaint())
+            {
+                coverPaint.IsAntialias = true;
+                canvas.DrawImage(coverImage, coverRect, samplingOptions, coverPaint);
+            }
+
+            canvas.Restore();
+
+            using (var borderPaint = new SKPaint())
+            {
+                borderPaint.Color = voteEffect.Primary.WithAlpha(210);
+                borderPaint.Style = SKPaintStyle.Stroke;
+                borderPaint.StrokeWidth = 3;
+                borderPaint.IsAntialias = true;
+
+                canvas.DrawPath(coverPath, borderPaint);
+            }
+        }
 
         var textX = coverRect.Right + 32;
         var textWidth = width - textX - padding;
@@ -120,7 +136,7 @@ public class CoverGenerator(
             y += authorLineHeight;
         }
 
-        DrawEmojiCluster(canvas, new SKRect(0, 0, width, height), voteEffect, animationProgress);
+        // DrawEmojiCluster(canvas, new SKRect(0, 0, width, height), voteEffect);
 
         var drawableSenderAvatar = new DrawableAvatar(
             sender.AvatarUrl,
@@ -133,26 +149,26 @@ public class CoverGenerator(
         //     drawableSenderAvatar,
         //     size: 48
         // );
-
-        if (avatarUrls is { Count: > 0 })
-        {
-            var drawableAvatars = avatarUrls
-                .Select(uv => new DrawableAvatar(uv.AvatarUrl, GetVoteEffect(uv.Level).Primary.WithAlpha(210)))
-                .ToList();
-
-            var avatarSize = 64f;
-            var avatarOverlap = 24f;
-            var avatarPadding = 16;
-
-            // await avatarDrawer.DrawClusterAsync(
-            //     canvas,
-            //     new SKPoint(width - avatarPadding - avatarSize / 2f, avatarPadding + avatarSize / 2f),
-            //     drawableAvatars,
-            //     size: avatarSize,
-            //     overlap: avatarOverlap,
-            //     reversed: true
-            // );
-        }
+        //
+        // if (avatarUrls is { Count: > 0 })
+        // {
+        //     var drawableAvatars = avatarUrls
+        //         .Select(uv => new DrawableAvatar(uv.AvatarUrl, GetVoteEffect(uv.Level).Primary.WithAlpha(210)))
+        //         .ToList();
+        //
+        //     var avatarSize = 64f;
+        //     var avatarOverlap = 24f;
+        //     var avatarPadding = 16;
+        //
+        //     await avatarDrawer.DrawClusterAsync(
+        //         canvas,
+        //         new SKPoint(width - avatarPadding - avatarSize / 2f, avatarPadding + avatarSize / 2f),
+        //         drawableAvatars,
+        //         size: avatarSize,
+        //         overlap: avatarOverlap,
+        //         reversed: true
+        //     );
+        // }
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
@@ -161,199 +177,105 @@ public class CoverGenerator(
         return data.ToArray();
     }
 
-    private static void DrawEmojiCluster(SKCanvas canvas, SKRect coverRect, VoteEffect voteEffect, float progress)
-    {
-        using var emojiTypeface = SKTypeface.FromFamilyName("Segoe UI Emoji");
-
-        var x = coverRect.Right - 38;
-        var y = coverRect.Bottom - 38;
-
-        var smallLeft = GetEmojiBadgeAnimation(progress, 0f, 12);
-        var smallTop = GetEmojiBadgeAnimation(progress, 0.34f, -18);
-        var large = GetEmojiBadgeAnimation(progress, 0.68f, -8);
-
-        DrawEmojiBadge(
-            canvas,
-            voteEffect.Emoji,
-            emojiTypeface,
-            new SKPoint(x - 42 + smallLeft.Offset.X, y + 4 + smallLeft.Offset.Y),
-            28,
-            smallLeft.RotationDegrees,
-            smallLeft.Scale,
-            smallLeft.Alpha
-        );
-
-        DrawEmojiBadge(
-            canvas,
-            voteEffect.Emoji,
-            emojiTypeface,
-            new SKPoint(x + 4 + smallTop.Offset.X, y - 44 + smallTop.Offset.Y),
-            24,
-            smallTop.RotationDegrees,
-            smallTop.Scale,
-            smallTop.Alpha
-        );
-
-        DrawEmojiBadge(
-            canvas,
-            voteEffect.Emoji,
-            emojiTypeface,
-            new SKPoint(x + large.Offset.X, y + large.Offset.Y),
-            52,
-            large.RotationDegrees,
-            large.Scale,
-            large.Alpha
-        );
-    }
-
-    private static EmojiBadgeAnimation GetEmojiBadgeAnimation(
-        float progress,
-        float phase,
-        float baseRotationDegrees
-    )
-    {
-        var loop = NormalizeProgress(progress + phase) * MathF.Tau;
-        var lift = EaseOutSine(MathF.Sin(loop - MathF.PI / 2f) * 0.5f + 0.5f);
-        var sway = MathF.Sin(loop);
-        var bounce = MathF.Sin(loop * 2f);
-
-        return new EmojiBadgeAnimation(
-            new SKPoint(sway * 3.5f, -lift * 10f + bounce * 1.5f),
-            baseRotationDegrees + sway * 7f,
-            0.92f + lift * 0.16f,
-            (byte)(190 + lift * 65)
-        );
-    }
-
-    private static void DrawEmojiBadge(
-        SKCanvas canvas,
-        string emoji,
-        SKTypeface typeface,
-        SKPoint center,
-        float size,
-        float rotationDegrees,
-        float scale = 1f,
-        byte alpha = 255
-    )
-    {
-        canvas.Save();
-        canvas.RotateDegrees(rotationDegrees, center.X, center.Y);
-        canvas.Scale(scale, scale, center.X, center.Y);
-
-        using var font = new SKFont(typeface, size);
-        using var emojiPaint = new SKPaint();
-        emojiPaint.IsAntialias = true;
-        emojiPaint.Color = SKColors.White.WithAlpha(alpha);
-
-        var emojiWidth = font.MeasureText(emoji);
-        var metrics = font.Metrics;
-        var baselineY = center.Y - (metrics.Ascent + metrics.Descent) / 2f;
-
-        canvas.DrawText(
-            emoji,
-            center.X - emojiWidth / 2f,
-            baselineY,
-            SKTextAlign.Left,
-            font,
-            emojiPaint
-        );
-
-        canvas.Restore();
-    }
-
-    private static void DrawAnimatedCoverCard(
-        SKCanvas canvas,
-        SKImage coverImage,
-        SKRect coverRect,
-        float cornerRadius,
-        SKSamplingOptions samplingOptions,
-        VoteEffect voteEffect,
-        float progress
-    )
-    {
-        var loop = progress * MathF.Tau;
-        var pulse = MathF.Sin(loop);
-        var lift = EaseOutSine(MathF.Sin(loop - MathF.PI / 2f) * 0.5f + 0.5f);
-        var scale = 1f + lift * 0.025f;
-        var rotationDegrees = pulse * 1.8f;
-        var shadowOffsetY = 11f + lift * 9f;
-
-        canvas.Save();
-        canvas.Translate(coverRect.MidX, coverRect.MidY);
-        canvas.RotateDegrees(rotationDegrees);
-        canvas.Scale(scale);
-        canvas.Translate(-coverRect.MidX, -coverRect.MidY);
-
-        using (var shadowPaint = new SKPaint())
-        {
-            shadowPaint.IsAntialias = true;
-            shadowPaint.Color = voteEffect.Primary.WithAlpha((byte)(80 + lift * 65));
-            shadowPaint.ImageFilter = SKImageFilter.CreateBlur(18 + lift * 8, 18 + lift * 8);
-
-            var shadowRect = coverRect;
-            shadowRect.Offset(0, shadowOffsetY);
-            shadowRect.Inflate(4 + lift * 5, 4 + lift * 5);
-
-            canvas.DrawRoundRect(shadowRect, cornerRadius + 4, cornerRadius + 4, shadowPaint);
-        }
-
-        using (var coverPath = new SKPath())
-        {
-            coverPath.AddRoundRect(coverRect, cornerRadius, cornerRadius);
-
-            canvas.Save();
-            canvas.ClipPath(coverPath, antialias: true);
-
-            using (var coverPaint = new SKPaint())
-            {
-                coverPaint.IsAntialias = true;
-                canvas.DrawImage(coverImage, coverRect, samplingOptions, coverPaint);
-            }
-
-            DrawCardLightSweep(canvas, coverRect, voteEffect, progress);
-
-            canvas.Restore();
-
-            using (var borderPaint = new SKPaint())
-            {
-                borderPaint.Color = voteEffect.Primary.WithAlpha((byte)(175 + lift * 80));
-                borderPaint.Style = SKPaintStyle.Stroke;
-                borderPaint.StrokeWidth = 3 + lift * 1.5f;
-                borderPaint.IsAntialias = true;
-
-                canvas.DrawPath(coverPath, borderPaint);
-            }
-        }
-
-        canvas.Restore();
-    }
-
-    private static void DrawCardLightSweep(SKCanvas canvas, SKRect coverRect, VoteEffect voteEffect, float progress)
-    {
-        var sweepWidth = coverRect.Width * 0.42f;
-        var x = Lerp(coverRect.Left - sweepWidth, coverRect.Right + sweepWidth, progress);
-        var start = new SKPoint(x - sweepWidth, coverRect.Top);
-        var end = new SKPoint(x + sweepWidth, coverRect.Bottom);
-
-        using var sweepPaint = new SKPaint();
-        sweepPaint.IsAntialias = true;
-        sweepPaint.BlendMode = SKBlendMode.Screen;
-        sweepPaint.Shader = SKShader.CreateLinearGradient(
-            start,
-            end,
-            [
-                SKColors.Transparent,
-                voteEffect.Secondary.WithAlpha(42),
-                SKColors.White.WithAlpha(72),
-                voteEffect.Primary.WithAlpha(36),
-                SKColors.Transparent
-            ],
-            [0f, 0.36f, 0.5f, 0.64f, 1f],
-            SKShaderTileMode.Clamp
-        );
-
-        canvas.DrawRect(coverRect, sweepPaint);
-    }
+    // private static void DrawEmojiCluster(SKCanvas canvas, SKRect coverRect, VoteEffect voteEffect, float progress)
+    // {
+    //     using var emojiTypeface = SKTypeface.FromFamilyName("Segoe UI Emoji");
+    //
+    //     var x = coverRect.Right - 38;
+    //     var y = coverRect.Bottom - 38;
+    //
+    //     var smallLeft = GetEmojiBadgeAnimation(progress, 0f, 12);
+    //     var smallTop = GetEmojiBadgeAnimation(progress, 0.34f, -18);
+    //     var large = GetEmojiBadgeAnimation(progress, 0.68f, -8);
+    //
+    //     DrawEmojiBadge(
+    //         canvas,
+    //         voteEffect.Emoji,
+    //         emojiTypeface,
+    //         new SKPoint(x - 42 + smallLeft.Offset.X, y + 4 + smallLeft.Offset.Y),
+    //         28,
+    //         smallLeft.RotationDegrees,
+    //         smallLeft.Scale,
+    //         smallLeft.Alpha
+    //     );
+    //
+    //     DrawEmojiBadge(
+    //         canvas,
+    //         voteEffect.Emoji,
+    //         emojiTypeface,
+    //         new SKPoint(x + 4 + smallTop.Offset.X, y - 44 + smallTop.Offset.Y),
+    //         24,
+    //         smallTop.RotationDegrees,
+    //         smallTop.Scale,
+    //         smallTop.Alpha
+    //     );
+    //
+    //     DrawEmojiBadge(
+    //         canvas,
+    //         voteEffect.Emoji,
+    //         emojiTypeface,
+    //         new SKPoint(x + large.Offset.X, y + large.Offset.Y),
+    //         52,
+    //         large.RotationDegrees,
+    //         large.Scale,
+    //         large.Alpha
+    //     );
+    // }
+    //
+    // private static EmojiBadgeAnimation GetEmojiBadgeAnimation(
+    //     float progress,
+    //     float phase,
+    //     float baseRotationDegrees
+    // )
+    // {
+    //     var loop = NormalizeProgress(progress + phase) * MathF.Tau;
+    //     var lift = EaseOutSine(MathF.Sin(loop - MathF.PI / 2f) * 0.5f + 0.5f);
+    //     var sway = MathF.Sin(loop);
+    //     var bounce = MathF.Sin(loop * 2f);
+    //
+    //     return new EmojiBadgeAnimation(
+    //         new SKPoint(sway * 3.5f, -lift * 10f + bounce * 1.5f),
+    //         baseRotationDegrees + sway * 7f,
+    //         0.92f + lift * 0.16f,
+    //         (byte)(190 + lift * 65)
+    //     );
+    // }
+    //
+    // private static void DrawEmojiBadge(
+    //     SKCanvas canvas,
+    //     string emoji,
+    //     SKTypeface typeface,
+    //     SKPoint center,
+    //     float size,
+    //     float rotationDegrees,
+    //     float scale = 1f,
+    //     byte alpha = 255
+    // )
+    // {
+    //     canvas.Save();
+    //     canvas.RotateDegrees(rotationDegrees, center.X, center.Y);
+    //     canvas.Scale(scale, scale, center.X, center.Y);
+    //
+    //     using var font = new SKFont(typeface, size);
+    //     using var emojiPaint = new SKPaint();
+    //     emojiPaint.IsAntialias = true;
+    //     emojiPaint.Color = SKColors.White.WithAlpha(alpha);
+    //
+    //     var emojiWidth = font.MeasureText(emoji);
+    //     var metrics = font.Metrics;
+    //     var baselineY = center.Y - (metrics.Ascent + metrics.Descent) / 2f;
+    //
+    //     canvas.DrawText(
+    //         emoji,
+    //         center.X - emojiWidth / 2f,
+    //         baselineY,
+    //         SKTextAlign.Left,
+    //         font,
+    //         emojiPaint
+    //     );
+    //
+    //     canvas.Restore();
+    // }
 
     private static void DrawVoteEffect(SKCanvas canvas, int width, int height, SKRect coverRect, VoteEffect voteEffect)
     {
@@ -525,12 +447,5 @@ public class CoverGenerator(
         SKColor Primary,
         SKColor Secondary,
         string Emoji
-    );
-
-    private record EmojiBadgeAnimation(
-        SKPoint Offset,
-        float RotationDegrees,
-        float Scale,
-        byte Alpha
     );
 }

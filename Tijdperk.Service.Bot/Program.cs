@@ -47,10 +47,11 @@ builder.Services.AddHostedService<DiscordHostedService>();
 
 var app = builder.Build();
 
-// await app.Services.MigrateNpgsqlContext();
-// await app.Services.GetRequiredService<InteractionHandler>().InitializeAsync();
+await app.Services.MigrateNpgsqlContext();
+await app.Services.GetRequiredService<InteractionHandler>().InitializeAsync();
+app.Run();
 
-var coverGenerator = app.Services.GetRequiredService<CoverGenerator>();
+// var coverGenerator = app.Services.GetRequiredService<CoverGenerator>();
 
 // var coverStream = await coverGenerator.GenerateCoverImage(
 //     "Het Ergste Moet Nog Komen (Outro) extended",
@@ -72,7 +73,7 @@ var coverGenerator = app.Services.GetRequiredService<CoverGenerator>();
 // );
 
 
-var songs = new List<SongHolder>();
+// var songs = new List<SongHolder>();
 
 // songs.Add(new SongHolder(
 //     "MONTAGEM VIRA (Slowed)",
@@ -196,7 +197,5 @@ var songs = new List<SongHolder>();
 // }
 
 // var coverGenerator = app.Services.GetRequiredService<CoverGenerator>();
-var webP = await AnimationGenerator.CreateAnimatedWebP(coverGenerator);
-await File.WriteAllBytesAsync("C:\\Users\\devpi\\Desktop\\tijdperk\\animation.webp", webP);
-
-// app.Run();
+// var webP = await AnimationGenerator.CreateAnimatedWebP(coverGenerator);
+// await File.WriteAllBytesAsync("C:\\Users\\devpi\\Desktop\\tijdperk\\animation.webp", webP);

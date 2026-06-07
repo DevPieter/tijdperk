@@ -23,7 +23,7 @@ public class AnimationGenerator
                 "Sefa",
                 "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg",
                 SongVoteLevel.Love,
-                new CoverGenerator.UserVote(
+                new CoverGenerator.UserVote(    
                     "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128",
                     SongVoteLevel.Love
                 ),
