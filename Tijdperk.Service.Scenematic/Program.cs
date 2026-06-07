@@ -1,7 +1,9 @@
 using Scalar.AspNetCore;
 using Tijdperk.Data.Postgres.Extensions;
 using Tijdperk.Scenematic.Data.Models.DTOs;
+using Tijdperk.Scenematic.Data.Models.DTOs.Covers;
 using Tijdperk.Scenematic.Data.Postgres.Extensions;
+using Tijdperk.Scenematic.Data.Postgres.Repositories;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
 using Tijdperk.Scenematic.Queue.Redis.Extensions;
@@ -51,8 +53,23 @@ app.MapPost("generate-cover", async (
     dto ??= new RegisterGenerateCoverDto(
         "UNSTOPPABLE",
         "The Purge, Omnya & Iris Goes",
-        "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg"
+        "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg",
+        []
     );
+
+    var hash = CoverJobRepository.GenerateCoverMetaHash(dto);
+    var existingJobResult = await service.GetByMetaHashAsync(hash);
+    if (existingJobResult.IsSuccess)
+    {
+        return Results.Ok(
+            new
+            {
+                existingJobResult.Data.Id,
+                existingJobResult.Data.State,
+                existingJobResult.Data.ErrorMessage
+            }
+        );
+    }
 
     var job = await service.RegisterAsync(dto);
 

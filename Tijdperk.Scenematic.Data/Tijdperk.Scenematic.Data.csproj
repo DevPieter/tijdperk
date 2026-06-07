@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Tijdperk.Common.Core\Tijdperk.Common.Core.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Common\Tijdperk.Scenematic.Common.csproj" />
     </ItemGroup>
 

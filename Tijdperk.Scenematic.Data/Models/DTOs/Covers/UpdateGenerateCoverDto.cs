@@ -1,6 +1,6 @@
 ﻿using Tijdperk.Scenematic.Common.Enums;
 
-namespace Tijdperk.Scenematic.Data.Models.DTOs;
+namespace Tijdperk.Scenematic.Data.Models.DTOs.Covers;
 
 // public record UpdateGenerateCoverDto(
 //     GenerateCoverJobState State,

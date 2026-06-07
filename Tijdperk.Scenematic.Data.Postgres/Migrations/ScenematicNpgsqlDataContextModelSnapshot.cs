@@ -22,7 +22,7 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.GenerateCoverJob", b =>
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverMeta", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -40,8 +40,49 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.HasKey("Id");
+
+                    b.ToTable("CoverMetas");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverVoteMeta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CoverMetaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VoteLevel")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoverMetaId");
+
+                    b.ToTable("CoverVoteMetas");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CoverMetaHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CoverMetaId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -67,7 +108,35 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CoverMetaId")
+                        .IsUnique();
+
                     b.ToTable("GenerateCoverJobs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverVoteMeta", b =>
+                {
+                    b.HasOne("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverMeta", "CoverMeta")
+                        .WithMany("CoverVotes")
+                        .HasForeignKey("CoverMetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoverMeta");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", b =>
+                {
+                    b.HasOne("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverMeta", "CoverMeta")
+                        .WithOne()
+                        .HasForeignKey("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", "CoverMetaId");
+
+                    b.Navigation("CoverMeta");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverMeta", b =>
+                {
+                    b.Navigation("CoverVotes");
                 });
 #pragma warning restore 612, 618
         }

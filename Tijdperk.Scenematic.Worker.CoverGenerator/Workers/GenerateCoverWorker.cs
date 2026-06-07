@@ -1,8 +1,9 @@
-﻿using Tijdperk.Common.Core.Enums.Common;
+﻿using StackExchange.Redis;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Common.Enums;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
+using ResultType = Tijdperk.Common.Core.Enums.Common.ResultType;
 
 namespace Tijdperk.Scenematic.Worker.CoverGenerator.Workers;
 
@@ -30,6 +31,12 @@ public class GenerateCoverWorker(
             catch (OperationCanceledException)
             {
                 break;
+            }
+            catch (RedisTimeoutException)
+            {
+                logger.LogWarning("Redis timeout while dequeuing job, retrying...");
+                await Task.Delay(1000, stoppingToken);
+                continue;
             }
             catch (Exception ex)
             {

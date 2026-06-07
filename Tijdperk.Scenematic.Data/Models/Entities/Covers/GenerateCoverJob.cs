@@ -1,20 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Tijdperk.Scenematic.Common.Enums;
 
-namespace Tijdperk.Scenematic.Data.Models.Entities;
+namespace Tijdperk.Scenematic.Data.Models.Entities.Covers;
 
 public class GenerateCoverJob
 {
     public Guid Id { get; init; }
 
-    [Required]
-    public string AlbumTitle { get; init; } = null!;
+    public Guid? CoverMetaId { get; set; }
+    public CoverMeta? CoverMeta { get; set; }
 
-    [Required]
-    public string AlbumArtist { get; init; } = null!;
-
-    [Required]
-    public string AlbumCoverImageUrl { get; init; } = null!;
+    public string CoverMetaHash { get; init; } = null!;
 
     [Required]
     public GenerateCoverJobState State { get; set; }
