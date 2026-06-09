@@ -83,14 +83,14 @@ Tijdperk is organized into the following projects:
 ### Prerequisites
 
 - .NET 10 SDK ([Download .NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0))
-- Docker Desktop or Docker Engine with Docker Compose
+- Docker Desktop or Docker Engine with Docker Compose ([Getting Started with Docker](https://docs.docker.com/get-started/))
 - Discord Bot Token ([How to obtain a token](#creating-a-discord-bot-and-obtaining-a-token))
 - A guild/server where you have permissions to add the bot
 
 - Local dependencies ([Setting Up Local Dependencies](#setting-up-local-dependencies))
   - **Two** PostgreSQL databases 
-  - Redis instance
-  - MinIO instance
+  - A Redis instance
+  - A MinIO instance
 
 ### Configuring App Settings
 
@@ -116,6 +116,9 @@ Example:
 
 ```json
 {
+  "ConnectionStrings": {
+    "Postgres": "Server=localhost;Port=5432;Database=tijdperk;User Id=tijdperk;Password=tijdperk;"
+  },
   "Discord": {
     "Bot": {
       "Token": "YOUR_DISCORD_BOT_TOKEN",
@@ -125,9 +128,6 @@ Example:
       "Id": 123456789012345678,
       "MusicChannelId": 123456789012345678
     }
-  },
-  "ConnectionStrings": {
-    "Postgres": "Server=localhost;Port=5432;Database=tijdperk;User Id=tijdperk;Password=tijdperk;"
   }
 }
 ```
@@ -189,8 +189,8 @@ Example:
     },
     "MinIO": {
       "Endpoint": "localhost:9000",
-      "AccessKey": "tijdperk_minio",
-      "SecretKey": "tijdperk_minio_password"
+      "AccessKey": "YOUR_MINIO_ACCESS_KEY",
+      "SecretKey": "YOUR_MINIO_SECRET_KEY"
     },
     "Bucket": {
       "Cover": {
@@ -233,12 +233,12 @@ docker compose -f compose.local.yaml down -v
 
 The local connection details are:
 
-| Dependency            | Local address           | Credentials                                                                                   |
-| --------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
-| Main PostgreSQL       | `localhost:5432`        | Database: `tijdperk`, user: `tijdperk`, password: `tijdperk`                                  |
-| Scenematic PostgreSQL | `localhost:5433`        | Database: `tijdperk_scenematic`, user: `tijdperk_scenematic`, password: `tijdperk_scenematic` |
-| Redis                 | `localhost:6379`        | No password                                                                                   |
-| MinIO API             | `localhost:9000`        | Access key: `tijdperk_minio`, secret key: `tijdperk_minio_password`                           |
+| Dependency            | Local address    | Credentials                                                                                   |
+| --------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| Main PostgreSQL       | `localhost:5432` | Database: `tijdperk`, user: `tijdperk`, password: `tijdperk`                                  |
+| Scenematic PostgreSQL | `localhost:5433` | Database: `tijdperk_scenematic`, user: `tijdperk_scenematic`, password: `tijdperk_scenematic` |
+| Redis                 | `localhost:6379` | No password                                                                                   |
+| MinIO API             | `localhost:9000` | Root user: `tijdperk_minio`, root password: `tijdperk_minio_password`                         |
 
 ### Setting Up MinIO with the CLI Client
 
@@ -297,6 +297,26 @@ Apply the anonymous read policy to the bucket:
 
 ```bash
 mc anonymous set-json "C:\path\to\minio-public-read.json" tijdperk-local/tijdperk
+```
+
+Create an access key for the application:
+
+```bash
+mc admin accesskey create tijdperk-local/ --expiry-duration 0
+```
+
+The command prints an `Access Key` and `Secret Key`. Use those values in `Tijdperk.Scenematic.Worker.CoverGenerator/appsettings.Development.json`:
+
+```json
+{
+  "Scenematic": {
+    "MinIO": {
+      "Endpoint": "localhost:9000",
+      "AccessKey": "ACCESS_KEY_FROM_MC",
+      "SecretKey": "SECRET_KEY_FROM_MC"
+    }
+  }
+}
 ```
 
 ## Running Local Development
