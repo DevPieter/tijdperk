@@ -41,27 +41,27 @@ builder.Services.AddHostedService<GenerateCoverWorker>();
 
 var app = builder.Build();
 
-app.MapGet("generate", (
-    Renderer renderer,
-    IHttpClientFactory httpClientFactory
-) =>
-{
-    var client = httpClientFactory.CreateClient();
-    var cover = new CoverSceneRenderer(client);
-
-    renderer.Add(new Scene("Cover 0", 0, cover));
-    renderer.Add(new Scene("Cover 1", 4, cover));
-    renderer.Add(new Scene("Cover 2", 6, new CoverSceneRenderer(client), 1).AddOverlay(new BrandingOverlay()));
-
-    renderer.Initialize();
-    var image = renderer.Render();
-
-    return Results.File(
-        image,
-        "image/webp",
-        $"animation_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.webp"
-    );
-});
+// app.MapGet("generate", (
+//     Renderer renderer,
+//     IHttpClientFactory httpClientFactory
+// ) =>
+// {
+//     var client = httpClientFactory.CreateClient();
+//     var cover = new CoverSceneRenderer(client);
+//
+//     renderer.Add(new Scene("Cover 0", 0, cover));
+//     renderer.Add(new Scene("Cover 1", 4, cover));
+//     renderer.Add(new Scene("Cover 2", 6, new CoverSceneRenderer(client), 1).AddOverlay(new BrandingOverlay()));
+//
+//     renderer.Initialize();
+//     var image = renderer.Render();
+//
+//     return Results.File(
+//         image,
+//         "image/webp",
+//         $"animation_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.webp"
+//     );
+// });
 
 app.Run();
 

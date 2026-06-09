@@ -1,0 +1,68 @@
+name: tijdperk-local
+
+services:
+  tijdperk-postgres:
+    image: postgres:latest
+    container_name: tijdperk-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: tijdperk
+      POSTGRES_USER: tijdperk
+      POSTGRES_PASSWORD: tijdperk
+
+    volumes:
+      - tijdperk-postgres-data:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"
+
+  tijdperk-scenematic-postgres:
+    image: postgres:latest
+    container_name: tijdperk-scenematic-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: tijdperk_scenematic
+      POSTGRES_USER: tijdperk_scenematic
+      POSTGRES_PASSWORD: tijdperk_scenematic
+
+    volumes:
+      - tijdperk-scenematic-postgres-data:/var/lib/postgresql/data
+
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: redis:latest
+    container_name: tijdperk-scenematic-redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:latest
+    container_name: tijdperk-scenematic-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+    environment:
+      MINIO_ROOT_USER: tijdperk_minio
+      MINIO_ROOT_PASSWORD: tijdperk_minio_password
+      MINIO_SERVER_URL: http://localhost:9000
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+
+    volumes:
+      - tijdperk-scenematic-minio-data:/data
+      - tijdperk-scenematic-minio-config:/root/.minio
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+volumes:
+  tijdperk-postgres-data:
+  tijdperk-scenematic-postgres-data:
+  tijdperk-scenematic-minio-data:
+  tijdperk-scenematic-minio-config:
