@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Tijdperk.Scenematic.Bucket.MinIO\Tijdperk.Scenematic.Bucket.MinIO.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Data.Postgres\Tijdperk.Scenematic.Data.Postgres.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Logic\Tijdperk.Scenematic.Logic.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Queue.Redis\Tijdperk.Scenematic.Queue.Redis.csproj" />
