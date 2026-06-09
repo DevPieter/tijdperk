@@ -1,9 +1,8 @@
-﻿using StackExchange.Redis;
+﻿using Tijdperk.Common.Core.Enums.Common;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Common.Enums;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
-using ResultType = Tijdperk.Common.Core.Enums.Common.ResultType;
 
 namespace Tijdperk.Scenematic.Worker.CoverGenerator.Workers;
 
@@ -32,7 +31,7 @@ public class GenerateCoverWorker(
             {
                 break;
             }
-            catch (RedisTimeoutException)
+            catch (StackExchange.Redis.RedisTimeoutException)
             {
                 logger.LogWarning("Redis timeout while dequeuing job, retrying...");
                 await Task.Delay(1000, stoppingToken);
@@ -46,7 +45,7 @@ public class GenerateCoverWorker(
             }
 
             using var scope = scopeFactory.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<CoverGeneratorService>();
+            var service = scope.ServiceProvider.GetRequiredService<CoverGeneratorJobService>();
 
             try
             {
@@ -83,9 +82,9 @@ public class GenerateCoverWorker(
         logger.LogInformation("Cover generation worker stopped");
     }
 
-    private async Task ProcessAsync(Guid jobId, CoverGeneratorService service, CancellationToken stoppingToken)
+    private async Task ProcessAsync(Guid jobId, CoverGeneratorJobService jobService, CancellationToken stoppingToken)
     {
-        var jobResult = await service.GetByIdAsync(jobId);
+        var jobResult = await jobService.GetByIdAsync(jobId);
 
         if (jobResult.Type == ResultType.NotFound)
         {
@@ -133,7 +132,7 @@ public class GenerateCoverWorker(
 
         logger.LogInformation("Processing cover generation job {JobId}", jobId);
 
-        var markStartedResult = await service.MarkStartedAsync(jobId);
+        var markStartedResult = await jobService.MarkStartedAsync(jobId);
         if (markStartedResult.IsError)
         {
             logger.LogError(
@@ -153,7 +152,7 @@ public class GenerateCoverWorker(
         {
             logger.LogInformation("Cover generation job {JobId} completed successfully", jobId);
 
-            var markResult = await service.MarkCompletedAsync(jobId);
+            var markResult = await jobService.MarkCompletedAsync(jobId);
             if (markResult.IsError)
             {
                 logger.LogError(
@@ -171,7 +170,7 @@ public class GenerateCoverWorker(
                 result.Message
             );
 
-            var markResult = await service.MarkFailedAsync(
+            var markResult = await jobService.MarkFailedAsync(
                 jobId,
                 GenerateCoverJobFailureReason.InternalError,
                 result.Message ?? "Unknown error"

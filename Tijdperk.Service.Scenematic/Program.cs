@@ -32,7 +32,7 @@ builder.Services.UseNpgsqlContext(tijdperkConnectionString);
 builder.Services.UseScenematicNpgsqlContext(scenematicConnectionString);
 builder.Services.UseScenematicRedis(scenematicRedisOptions);
 
-builder.Services.AddScoped<CoverGeneratorService>();
+builder.Services.AddScoped<CoverGeneratorJobService>();
 
 var app = builder.Build();
 
@@ -45,7 +45,7 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 
 app.MapPost("generate-cover", async (
-    CoverGeneratorService service,
+    CoverGeneratorJobService jobService,
     IGenerateCoverJobQueue queue,
     RegisterGenerateCoverDto? dto
 ) =>
@@ -58,7 +58,7 @@ app.MapPost("generate-cover", async (
     );
 
     var hash = CoverJobRepository.GenerateCoverMetaHash(dto);
-    var existingJobResult = await service.GetByMetaHashAsync(hash);
+    var existingJobResult = await jobService.GetByMetaHashAsync(hash);
     if (existingJobResult.IsSuccess)
     {
         return Results.Ok(
@@ -71,9 +71,9 @@ app.MapPost("generate-cover", async (
         );
     }
 
-    var job = await service.RegisterAsync(dto);
+    var job = await jobService.RegisterAsync(dto);
 
-    await service.MarkQueuedAsync(job.Data.Id);
+    await jobService.MarkQueuedAsync(job.Data.Id);
     await queue.EnqueueAsync(job.Data.Id);
 
     return Results.Accepted(

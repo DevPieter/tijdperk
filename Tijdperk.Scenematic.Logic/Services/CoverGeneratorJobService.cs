@@ -7,13 +7,11 @@ using Tijdperk.Scenematic.Data.Repositories;
 
 namespace Tijdperk.Scenematic.Logic.Services;
 
-public class CoverGeneratorService(
+public class CoverGeneratorJobService(
     ICoverJobRepository repository,
-    ILogger<CoverGeneratorService> logger
+    ILogger<CoverGeneratorJobService> logger
 )
 {
-    // public 
-
     public async Task<ResultObject<GenerateCoverJob>> RegisterAsync(RegisterGenerateCoverDto dto)
     {
         try

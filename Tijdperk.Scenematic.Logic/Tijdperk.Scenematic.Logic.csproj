@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Tijdperk.Common.Core\Tijdperk.Common.Core.csproj" />
+      <ProjectReference Include="..\Tijdperk.Scenematic.Bucket\Tijdperk.Scenematic.Bucket.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Data\Tijdperk.Scenematic.Data.csproj" />
       <ProjectReference Include="..\Tijdperk.Scenematic.Queue\Tijdperk.Scenematic.Queue.csproj" />
     </ItemGroup>
