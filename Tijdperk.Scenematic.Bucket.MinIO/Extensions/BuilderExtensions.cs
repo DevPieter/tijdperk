@@ -13,6 +13,7 @@ public static class BuilderExtensions
         services.AddMinio(client => client
             .WithEndpoint(minioOptions.Endpoint)
             .WithCredentials(minioOptions.AccessKey, minioOptions.SecretKey)
+            .WithSSL(minioOptions.UseSSL)
             .Build()
         );
 

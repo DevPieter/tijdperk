@@ -6,6 +6,7 @@ using Minio.DataModel.Args;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Bucket.Buckets;
 using Tijdperk.Scenematic.Bucket.Models;
+using Tijdperk.Scenematic.Bucket.Models.Covers;
 using Tijdperk.Scenematic.Bucket.Options;
 
 namespace Tijdperk.Scenematic.Bucket.MinIO.Buckets;
@@ -22,24 +23,21 @@ public partial class CoverBucket(
     [GeneratedRegex("^[a-z0-9-/_.]+$")]
     private static partial Regex ObjectNameRegex();
 
-    public async Task<ResultObject<CoverBucketResult>> PutObjectAsync(
-        string group,
-        string extension,
-        string localPath,
-        string contentType,
+    public async Task<ResultObject<PutCoverResult>> PutCoverAsync(
+        PutCoverArgs args,
         CancellationToken cancellationToken = default
     )
     {
         var coverOptions = bucketOptions.Value.Cover;
 
         var bucket = coverOptions.Bucket;
-        if (!IsBucketNameValid(bucket)) return ResultObject<CoverBucketResult>.Validation("Bucket name is invalid.");
+        if (!IsBucketNameValid(bucket)) return ResultObject<PutCoverResult>.Validation("Bucket name is invalid.");
 
         var id = Guid.NewGuid().ToString();
 
-        var objectName = GetPathName(id, group, extension, coverOptions.ObjectNameTemplate);
+        var objectName = GetPathName(id, args.Group, args.Extension, coverOptions.ObjectNameTemplate);
         if (!IsObjectNameValid(objectName))
-            return ResultObject<CoverBucketResult>.Validation("Object name is invalid.");
+            return ResultObject<PutCoverResult>.Validation("Object name is invalid.");
 
         logger.LogInformation(
             "Uploading object to MinIO. Bucket: {Bucket}, ObjectName: {ObjectName}",
@@ -52,8 +50,8 @@ public partial class CoverBucket(
             await minioClient.PutObjectAsync(new PutObjectArgs()
                     .WithBucket(bucket)
                     .WithObject(objectName)
-                    .WithFileName(localPath)
-                    .WithContentType(contentType),
+                    .WithFileName(args.LocalPath)
+                    .WithContentType(args.ContentType),
                 cancellationToken
             );
 
@@ -63,10 +61,10 @@ public partial class CoverBucket(
                 objectName
             );
 
-            return ResultObject<CoverBucketResult>.Success(new CoverBucketResult(
+            return ResultObject<PutCoverResult>.Success(new PutCoverResult(
                 Id: id,
-                Group: group,
-                Extension: extension,
+                Group: args.Group,
+                Extension: args.Extension,
                 BucketName: bucket,
                 ObjectName: objectName
             ));
@@ -79,7 +77,7 @@ public partial class CoverBucket(
                 bucket,
                 objectName
             );
-            return ResultObject<CoverBucketResult>.InternalError("Failed to upload object to MinIO.");
+            return ResultObject<PutCoverResult>.InternalError("Failed to upload object to MinIO.");
         }
     }
 

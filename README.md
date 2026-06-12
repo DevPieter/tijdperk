@@ -28,55 +28,55 @@ Tijdperk is organized into the following projects:
 ### Reference Flow
 
 - `Tijdperk.Service.Bot`
-  - -> `Tijdperk.Logic`
-  - -> `Tijdperk.Data.Postgres`
+    - -> `Tijdperk.Logic`
+    - -> `Tijdperk.Data.Postgres`
 
 - `Tijdperk.Service.Scenematic`
-  - -> `Tijdperk.Logic`
-  - -> `Tijdperk.Data.Postgres`
-  - -> `Tijdperk.Scenematic.Logic`
-  - -> `Tijdperk.Scenematic.Data.Postgres`
-  - -> `Tijdperk.Scenematic.Queue.Redis`
+    - -> `Tijdperk.Logic`
+    - -> `Tijdperk.Data.Postgres`
+    - -> `Tijdperk.Scenematic.Logic`
+    - -> `Tijdperk.Scenematic.Data.Postgres`
+    - -> `Tijdperk.Scenematic.Queue.Redis`
 
 - `Tijdperk.Scenematic.Worker.CoverGenerator`
-  - -> `Tijdperk.Scenematic.Logic`
-  - -> `Tijdperk.Scenematic.Data.Postgres`
-  - -> `Tijdperk.Scenematic.Queue.Redis`
-  - -> `Tijdperk.Scenematic.Bucket.MinIO`
+    - -> `Tijdperk.Scenematic.Logic`
+    - -> `Tijdperk.Scenematic.Data.Postgres`
+    - -> `Tijdperk.Scenematic.Queue.Redis`
+    - -> `Tijdperk.Scenematic.Bucket.MinIO`
 
 - `Tijdperk.Logic`
-  - -> `Tijdperk.Common.Data`
+    - -> `Tijdperk.Common.Data`
 
 - `Tijdperk.Data.Postgres`
-  - -> `Tijdperk.Common.Data`
+    - -> `Tijdperk.Common.Data`
 
 - `Tijdperk.Common.Data`
-  - -> `Tijdperk.Common.Core`
+    - -> `Tijdperk.Common.Core`
 
 - `Tijdperk.Scenematic.Logic`
-  - -> `Tijdperk.Common.Core`
-  - -> `Tijdperk.Scenematic.Bucket`
-  - -> `Tijdperk.Scenematic.Data`
-  - -> `Tijdperk.Scenematic.Queue`
+    - -> `Tijdperk.Common.Core`
+    - -> `Tijdperk.Scenematic.Bucket`
+    - -> `Tijdperk.Scenematic.Data`
+    - -> `Tijdperk.Scenematic.Queue`
 
 - `Tijdperk.Scenematic.Bucket.MinIO`
-  - -> `Tijdperk.Scenematic.Bucket`
+    - -> `Tijdperk.Scenematic.Bucket`
 
 - `Tijdperk.Scenematic.Bucket`
-  - -> `Tijdperk.Common.Core`
+    - -> `Tijdperk.Common.Core`
 
 - `Tijdperk.Scenematic.Data.Postgres`
-  - -> `Tijdperk.Scenematic.Data`
+    - -> `Tijdperk.Scenematic.Data`
 
 - `Tijdperk.Scenematic.Data`
-  - -> `Tijdperk.Common.Core`
-  - -> `Tijdperk.Scenematic.Common`
+    - -> `Tijdperk.Common.Core`
+    - -> `Tijdperk.Scenematic.Common`
 
 - `Tijdperk.Scenematic.Queue.Redis`
-  - -> `Tijdperk.Scenematic.Queue`
+    - -> `Tijdperk.Scenematic.Queue`
 
 - `Tijdperk.Scenematic.Queue`
-  - -> `Tijdperk.Scenematic.Common`
+    - -> `Tijdperk.Scenematic.Common`
 
 ## Local Development
 
@@ -88,9 +88,9 @@ Tijdperk is organized into the following projects:
 - A guild/server where you have permissions to add the bot
 
 - Local dependencies ([Setting Up Local Dependencies](#setting-up-local-dependencies))
-  - **Two** PostgreSQL databases 
-  - A Redis instance
-  - A MinIO instance
+    - **Two** PostgreSQL databases
+    - A Redis instance
+    - A MinIO instance
 
 ### Configuring App Settings
 
@@ -105,7 +105,7 @@ For local development, create `appsettings.Development.json` files in the projec
 #### App Settings for `Tijdperk.Service.Bot`
 
 | Setting                      | Description                                                                                                           |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+|------------------------------|-----------------------------------------------------------------------------------------------------------------------|
 | `Discord.Bot.Token`          | Your Discord Bot Token. [How to obtain a token](#creating-a-discord-bot-and-obtaining-a-token)                        |
 | `Discord.Bot.CustomStatus`   | (Optional) A custom status message for your bot.                                                                      |
 | `Guild.Id`                   | The ID of the guild/server where the bot will operate. [Obtaining Guild IDs](#obtaining-guild-ids)                    |
@@ -135,7 +135,7 @@ Example:
 #### App Settings for `Tijdperk.Service.Scenematic`
 
 | Setting                        | Description                                                        |
-| ------------------------------ | ------------------------------------------------------------------ |
+|--------------------------------|--------------------------------------------------------------------|
 | `ConnectionStrings.Tijdperk`   | Main Tijdperk PostgreSQL connection string.                        |
 | `ConnectionStrings.Scenematic` | Scenematic PostgreSQL connection string.                           |
 | `Scenematic.Redis.Host`        | Redis host.                                                        |
@@ -162,17 +162,18 @@ Example:
 
 #### App Settings for `Tijdperk.Scenematic.Worker.CoverGenerator`
 
-| Setting                                      | Description                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------ |
-| `ConnectionStrings.Scenematic`               | Scenematic PostgreSQL connection string.                           |
-| `Scenematic.Redis.Host`                      | Redis host.                                                        |
-| `Scenematic.Redis.Port`                      | Redis port.                                                        |
-| `Scenematic.Redis.Password`                  | Redis password. *Use an empty string for the local compose setup.* |
-| `Scenematic.MinIO.Endpoint`                  | MinIO endpoint used by the worker.                                 |
-| `Scenematic.MinIO.AccessKey`                 | MinIO access key.                                                  |
-| `Scenematic.MinIO.SecretKey`                 | MinIO secret key.                                                  |
-| `Scenematic.Bucket.Cover.Bucket`             | Bucket name for generated covers.                                  |
-| `Scenematic.Bucket.Cover.ObjectNameTemplate` | Object name template for generated cover files.                    |
+| Setting                                      | Description                                                                        |
+|----------------------------------------------|------------------------------------------------------------------------------------|
+| `ConnectionStrings.Scenematic`               | Scenematic PostgreSQL connection string.                                           |
+| `Scenematic.Redis.Host`                      | Redis host.                                                                        |
+| `Scenematic.Redis.Port`                      | Redis port.                                                                        |
+| `Scenematic.Redis.Password`                  | Redis password. *Use an empty string for the local compose setup.*                 |
+| `Scenematic.MinIO.Endpoint`                  | MinIO endpoint used by the worker.                                                 |
+| `Scenematic.MinIO.AccessKey`                 | MinIO access key.                                                                  |
+| `Scenematic.MinIO.SecretKey`                 | MinIO secret key.                                                                  |
+| `Scenematic.MinIO.UseSSL`                    | Whether to use SSL when connecting to MinIO. Set to `false` for local development. |
+| `Scenematic.Bucket.Cover.Bucket`             | Bucket name for generated covers.                                                  |
+| `Scenematic.Bucket.Cover.ObjectNameTemplate` | Object name template for generated cover files.                                    |
 
 Example:
 
@@ -190,7 +191,8 @@ Example:
     "MinIO": {
       "Endpoint": "localhost:9000",
       "AccessKey": "YOUR_MINIO_ACCESS_KEY",
-      "SecretKey": "YOUR_MINIO_SECRET_KEY"
+      "SecretKey": "YOUR_MINIO_SECRET_KEY",
+      "UseSSL": false
     },
     "Bucket": {
       "Cover": {
@@ -234,7 +236,7 @@ docker compose -f compose.local.yaml down -v
 The local connection details are:
 
 | Dependency            | Local address    | Credentials                                                                                   |
-| --------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+|-----------------------|------------------|-----------------------------------------------------------------------------------------------|
 | Main PostgreSQL       | `localhost:5432` | Database: `tijdperk`, user: `tijdperk`, password: `tijdperk`                                  |
 | Scenematic PostgreSQL | `localhost:5433` | Database: `tijdperk_scenematic`, user: `tijdperk_scenematic`, password: `tijdperk_scenematic` |
 | Redis                 | `localhost:6379` | No password                                                                                   |
@@ -313,7 +315,8 @@ The command prints an `Access Key` and `Secret Key`. Use those values in `Tijdpe
     "MinIO": {
       "Endpoint": "localhost:9000",
       "AccessKey": "ACCESS_KEY_FROM_MC",
-      "SecretKey": "SECRET_KEY_FROM_MC"
+      "SecretKey": "SECRET_KEY_FROM_MC",
+      "UseSSL": false
     }
   }
 }

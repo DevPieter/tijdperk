@@ -4,6 +4,8 @@ using Tijdperk.Scenematic.Common.Enums;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Models.Covers;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Processors;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Overlays;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Scenes;
 
@@ -15,17 +17,17 @@ public class GenerateCoverWorker(
     ILogger<GenerateCoverWorker> logger
 ) : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Cover generation worker started");
 
-        while (!stoppingToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             Guid jobId;
 
             try
             {
-                var dequeued = await queue.DequeueAsync(stoppingToken);
+                var dequeued = await queue.DequeueAsync(cancellationToken);
                 if (dequeued is null) continue;
 
                 jobId = dequeued.Value;
@@ -37,22 +39,28 @@ public class GenerateCoverWorker(
             catch (StackExchange.Redis.RedisTimeoutException)
             {
                 logger.LogWarning("Redis timeout while dequeuing job, retrying...");
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(1000, cancellationToken);
                 continue;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to dequeue job");
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(1000, cancellationToken);
                 continue;
             }
 
             using var scope = scopeFactory.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<CoverGeneratorJobService>();
+            var jobService = scope.ServiceProvider.GetRequiredService<CoverGeneratorJobService>();
+            var processorService = scope.ServiceProvider.GetRequiredService<CoverProcessor>();
 
             try
             {
-                await ProcessAsync(jobId, service, stoppingToken);
+                await ProcessAsync(
+                    jobId,
+                    jobService,
+                    processorService,
+                    cancellationToken
+                );
             }
             catch (OperationCanceledException)
             {
@@ -63,7 +71,7 @@ public class GenerateCoverWorker(
             {
                 logger.LogError(ex, "Job {JobId} failed", jobId);
 
-                var markResult = await service.MarkFailedAsync(
+                var markResult = await jobService.MarkFailedAsync(
                     jobId,
                     GenerateCoverJobFailureReason.InternalError,
                     ex.Message
@@ -85,7 +93,12 @@ public class GenerateCoverWorker(
         logger.LogInformation("Cover generation worker stopped");
     }
 
-    private async Task ProcessAsync(Guid jobId, CoverGeneratorJobService jobService, CancellationToken stoppingToken)
+    private async Task ProcessAsync(
+        Guid jobId,
+        CoverGeneratorJobService jobService,
+        CoverProcessor processor,
+        CancellationToken cancellationToken
+    )
     {
         var jobResult = await jobService.GetByIdAsync(jobId);
 
@@ -147,23 +160,12 @@ public class GenerateCoverWorker(
             return;
         }
 
-        // TODO - Process
-        // await Task.Delay(5_000, stoppingToken); // Simulate work
-        var result = Result.Success();
-
-        // var cover = new CoverSceneRenderer(client);
-        // renderer.Add(new Scene("Cover 0", 0, cover));
-        // renderer.Add(new Scene("Cover 1", 4, cover));
-        // renderer.Add(new Scene("Cover 2", 6, new CoverSceneRenderer(client), 1).AddOverlay(new BrandingOverlay()));
-        //
-        // renderer.Initialize();
-        // var image = renderer.Render();
-
-        // return Results.File(
-        //     image,
-        //     "image/webp",
-        //     $"animation_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.webp"
-        // );
+        // TODO - Give correct params with meta and stuff
+        var result = await processor.ProcessAsync(new ProcessCoverArgs(
+                jobId
+            ),
+            cancellationToken
+        );
 
         if (result.IsSuccess)
         {
@@ -189,7 +191,7 @@ public class GenerateCoverWorker(
 
             var markResult = await jobService.MarkFailedAsync(
                 jobId,
-                GenerateCoverJobFailureReason.InternalError,
+                result.FailureReason,
                 result.Message ?? "Unknown error"
             );
 

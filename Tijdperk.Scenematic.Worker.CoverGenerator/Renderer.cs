@@ -5,25 +5,38 @@ using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
 
 namespace Tijdperk.Scenematic.Worker.CoverGenerator;
 
-public class Renderer : IDisposable
+public class Renderer(int fps, int width, int height) : IDisposable
 {
-    private const int Fps = 16;
-    private const int Width = 1200;
-    private const int Height = 450;
+    // private const int Fps = 16;
+    // private const int Width = 1200;
+    // private const int Height = 450;
     public const int Quality = 100;
 
     private readonly List<Scene> _scenes = [];
 
-    public void Add(Scene scene)
-        => _scenes.Add(scene);
+    private bool _initializing;
+    private bool _initialized;
+    private bool _disposing;
+    private bool _disposed;
+    private bool _rendering;
+
+    public void Add(params Scene[] scenes)
+        => _scenes.AddRange(scenes);
 
     public void Initialize()
     {
+        if (_initialized) throw new InvalidOperationException("Renderer is already initialized.");
+        if (_initializing) throw new InvalidOperationException("Renderer is already initializing.");
+        if (_disposing) throw new InvalidOperationException("Renderer is currently disposing.");
+        if (_disposed) throw new InvalidOperationException("Renderer is already disposed.");
+        if (_rendering) throw new InvalidOperationException("Renderer is currently rendering.");
+        _initializing = true;
+
         foreach (var scene in _scenes)
         {
             var sceneContext = new InitContext(
-                Width,
-                Height,
+                width,
+                height,
                 scene
             );
 
@@ -34,10 +47,19 @@ public class Renderer : IDisposable
                 overlay.Initialize(sceneContext);
             }
         }
+
+        _initialized = true;
+        _initializing = false;
     }
 
     public void Dispose()
     {
+        if (_disposing) return;
+        if (_disposed) return;
+        if (_initializing) throw new InvalidOperationException("Cannot dispose while initializing.");
+        if (_rendering) throw new InvalidOperationException("Cannot dispose while rendering.");
+        _disposing = true;
+
         foreach (var scene in _scenes)
         {
             scene.Renderer.Dispose();
@@ -47,21 +69,30 @@ public class Renderer : IDisposable
                 overlay.Dispose();
             }
         }
+
+        _disposed = true;
+        _disposing = false;
     }
 
     public byte[] Render()
     {
+        if (!_initialized) throw new InvalidOperationException("Renderer is not initialized.");
+        if (_disposing) throw new InvalidOperationException("Renderer is currently disposing.");
+        if (_disposed) throw new InvalidOperationException("Renderer is already disposed.");
+        if (_rendering) throw new InvalidOperationException("Renderer is currently rendering.");
+        _rendering = true;
+
         var totalStopwatch = Stopwatch.StartNew();
         var sceneStopwatch = Stopwatch.StartNew();
         using var collection = new MagickImageCollection();
 
-        var totalFrames = _scenes.Sum(s => Math.Max(1, s.DurationSeconds * Fps));
+        var totalFrames = _scenes.Sum(s => Math.Max(1, s.DurationSeconds * fps));
         var frameIndex = 0;
 
         foreach (var scene in _scenes)
         {
             sceneStopwatch.Restart();
-            var sceneFrames = Math.Max(1, scene.DurationSeconds * Fps);
+            var sceneFrames = Math.Max(1, scene.DurationSeconds * fps);
 
             for (var i = 0; i < sceneFrames; i++)
             {
@@ -69,8 +100,8 @@ public class Renderer : IDisposable
                 var sceneProgress = CalculateProgress(i, sceneFrames);
 
                 var context = new RenderContext(
-                    Width,
-                    Height,
+                    width,
+                    height,
                     scene,
                     progress,
                     sceneProgress
@@ -78,7 +109,7 @@ public class Renderer : IDisposable
 
                 using var image = RenderSceneImage(scene, context);
 
-                image.AnimationDelay = (uint)(scene.DurationSeconds > 0 ? 100 / Fps : 0);
+                image.AnimationDelay = (uint)(scene.DurationSeconds > 0 ? 100 / fps : 0);
                 image.AnimationTicksPerSecond = scene.DurationSeconds > 0 ? 100 : 0;
 
                 collection.Add(image.Clone());
@@ -99,6 +130,8 @@ public class Renderer : IDisposable
         });
 
         Console.WriteLine($"Total rendering time: {totalStopwatch.Elapsed.TotalSeconds:F2}s");
+
+        _rendering = false;
         return outputStream.ToArray();
     }
 

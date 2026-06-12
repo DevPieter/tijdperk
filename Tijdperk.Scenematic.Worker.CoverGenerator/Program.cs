@@ -1,4 +1,3 @@
-using Tijdperk.Scenematic.Bucket.Buckets;
 using Tijdperk.Scenematic.Bucket.Extensions;
 using Tijdperk.Scenematic.Bucket.MinIO.Extensions;
 using Tijdperk.Scenematic.Bucket.MinIO.Options;
@@ -6,10 +5,7 @@ using Tijdperk.Scenematic.Data.Postgres.Extensions;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Redis.Extensions;
 using Tijdperk.Scenematic.Queue.Redis.Options;
-using Tijdperk.Scenematic.Worker.CoverGenerator;
-using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
-using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Overlays;
-using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Scenes;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Processors;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,9 +29,10 @@ builder.Services.UseScenematicNpgsqlContext(connectionString);
 builder.Services.UseScenematicRedis(redisOptions);
 builder.Services.UseScenematicMinIO(minioOptions);
 
-builder.Services.AddScoped<Renderer>();
+// builder.Services.AddScoped<Renderer>();
 builder.Services.AddHttpClient();
 
+builder.Services.AddScoped<CoverProcessor>();
 builder.Services.AddScoped<CoverGeneratorJobService>();
 builder.Services.AddHostedService<GenerateCoverWorker>();
 
