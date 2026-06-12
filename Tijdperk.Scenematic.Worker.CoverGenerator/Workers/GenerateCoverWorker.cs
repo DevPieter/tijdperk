@@ -3,6 +3,9 @@ using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Common.Enums;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Overlays;
+using Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Scenes;
 
 namespace Tijdperk.Scenematic.Worker.CoverGenerator.Workers;
 
@@ -145,8 +148,22 @@ public class GenerateCoverWorker(
         }
 
         // TODO - Process
-        await Task.Delay(5_000, stoppingToken); // Simulate work
+        // await Task.Delay(5_000, stoppingToken); // Simulate work
         var result = Result.Success();
+
+        // var cover = new CoverSceneRenderer(client);
+        // renderer.Add(new Scene("Cover 0", 0, cover));
+        // renderer.Add(new Scene("Cover 1", 4, cover));
+        // renderer.Add(new Scene("Cover 2", 6, new CoverSceneRenderer(client), 1).AddOverlay(new BrandingOverlay()));
+        //
+        // renderer.Initialize();
+        // var image = renderer.Render();
+
+        // return Results.File(
+        //     image,
+        //     "image/webp",
+        //     $"animation_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.webp"
+        // );
 
         if (result.IsSuccess)
         {

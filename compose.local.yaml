@@ -2,7 +2,7 @@ name: tijdperk-local
 
 services:
   tijdperk-postgres:
-    image: postgres:latest
+    image: postgres:18
     container_name: tijdperk-postgres
     restart: unless-stopped
 
@@ -12,13 +12,13 @@ services:
       POSTGRES_PASSWORD: tijdperk
 
     volumes:
-      - tijdperk-postgres-data:/var/lib/postgresql/data
+      - tijdperk-postgres-data:/var/lib/postgresql
 
     ports:
       - "5432:5432"
 
   tijdperk-scenematic-postgres:
-    image: postgres:latest
+    image: postgres:18
     container_name: tijdperk-scenematic-postgres
     restart: unless-stopped
 
@@ -28,7 +28,7 @@ services:
       POSTGRES_PASSWORD: tijdperk_scenematic
 
     volumes:
-      - tijdperk-scenematic-postgres-data:/var/lib/postgresql/data
+      - tijdperk-scenematic-postgres-data:/var/lib/postgresql
 
     ports:
       - "5433:5432"
