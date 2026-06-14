@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Logging;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Common.Enums;
 using Tijdperk.Scenematic.Data.Models.DTOs.Covers;
@@ -12,6 +14,22 @@ public class CoverGeneratorJobService(
     ILogger<CoverGeneratorJobService> logger
 )
 {
+    public static string GenerateCoverMetaHash(
+        string albumTitle,
+        string albumArtist,
+        string albumCoverImageUrl,
+        List<GenerateCoverVoteDto> coverVotes
+    )
+    {
+        var voteStr = string.Join("|",
+            coverVotes.OrderBy(cv => cv.AvatarUrl).Select(cv => $"{cv.VoteLevel}:{cv.AvatarUrl}")
+        );
+
+        var str = $"{albumTitle}|{albumArtist}|{albumCoverImageUrl}|{voteStr}";
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(str));
+        return Convert.ToBase64String(hashBytes);
+    }
+
     public async Task<ResultObject<GenerateCoverJob>> RegisterAsync(RegisterGenerateCoverDto dto)
     {
         try
@@ -114,12 +132,29 @@ public class CoverGeneratorJobService(
         }
     }
 
-    public async Task<Result> MarkCompletedAsync(Guid jobId)
+    public async Task<Result> MarkCompletedAsync(Guid jobId,
+        // TODO - Get as args object, not params
+        string mainCoverPath,
+        string debounceCoverPath,
+        string processingCoverPath
+    )
     {
         try
         {
             var job = await repository.GetByIdAsync(jobId);
             if (job is null) return Result.NotFound("Job not found");
+
+            var result = await repository.SetSuccessAsync(jobId, new SetGenerateCoverJobSuccessDto(
+                MainCoverPath: mainCoverPath,
+                DebounceCoverPath: debounceCoverPath,
+                ProcessingCoverPath: processingCoverPath
+            ));
+
+            if (result is null)
+            {
+                logger.LogError("Failed to set success result for job id {JobId}", jobId);
+                return Result.InternalError("Failed to set success result for job");
+            }
 
             var dto = ToUpdateDto(job);
             dto.State = GenerateCoverJobState.Completed;
@@ -139,8 +174,7 @@ public class CoverGeneratorJobService(
             var deleteSuccess = await repository.DeleteMetaAsync(jobId);
             if (!deleteSuccess)
             {
-                logger.LogError("Failed to delete cover meta for job id {JobId}", jobId);
-                return Result.InternalError("Failed to delete cover meta");
+                logger.LogError("Failed to delete meta for completed job id {JobId}", jobId);
             }
 
             return Result.Success();
@@ -163,10 +197,21 @@ public class CoverGeneratorJobService(
             var job = await repository.GetByIdAsync(jobId);
             if (job is null) return Result.NotFound("Job not found");
 
+            var result = await repository.SetFailureAsync(jobId, new SetGenerateCoverJobFailureDto(
+                FailureReason: reason,
+                ErrorMessage: errorMessage
+            ));
+
+            if (result is null)
+            {
+                logger.LogError(
+                    "Failed to set failure result for job id {JobId}, continuing to mark job as failed",
+                    jobId
+                );
+            }
+
             var dto = ToUpdateDto(job);
             dto.State = GenerateCoverJobState.Failed;
-            dto.FailureReason = reason;
-            dto.ErrorMessage = errorMessage;
 
             dto.FailedAt = DateTime.UtcNow;
             dto.QueuedAt ??= DateTime.UtcNow;
@@ -174,6 +219,7 @@ public class CoverGeneratorJobService(
             if (dto.CompletedAt is not null) dto.CompletedAt = null;
 
             var success = await repository.UpdateAsync(jobId, dto);
+
             return success
                 ? Result.Success()
                 : Result.InternalError("Failed to mark job as failed");
@@ -187,8 +233,6 @@ public class CoverGeneratorJobService(
 
     private static UpdateGenerateCoverDto ToUpdateDto(GenerateCoverJob job) => new(
         state: job.State,
-        failureReason: job.FailureReason,
-        errorMessage: job.ErrorMessage,
         queuedAt: job.QueuedAt,
         startedAt: job.StartedAt,
         completedAt: job.CompletedAt,

@@ -11,22 +11,11 @@ namespace Tijdperk.Scenematic.Data.Postgres.Repositories;
 
 public class CoverJobRepository(ScenematicNpgsqlDataContext context) : ICoverJobRepository
 {
-    public static string GenerateCoverMetaHash(RegisterGenerateCoverDto dto)
-    {
-        var voteStr = string.Join("|",
-            dto.CoverVotes.OrderBy(cv => cv.AvatarUrl).Select(cv => $"{cv.VoteLevel}:{cv.AvatarUrl}")
-        );
-
-        var str = $"{dto.AlbumTitle}|{dto.AlbumArtist}|{dto.AlbumCoverImageUrl}|{voteStr}";
-        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(str));
-        return Convert.ToBase64String(hashBytes);
-    }
-
     public async Task<GenerateCoverJob> RegisterAsync(RegisterGenerateCoverDto dto)
     {
         var job = new GenerateCoverJob()
         {
-            CoverMetaHash = GenerateCoverMetaHash(dto),
+            CoverMetaHash = dto.MetaHash,
             State = GenerateCoverJobState.Pending,
             CreatedAt = DateTime.UtcNow,
         };
@@ -67,9 +56,6 @@ public class CoverJobRepository(ScenematicNpgsqlDataContext context) : ICoverJob
 
         job.State = dto.State;
 
-        job.FailureReason = dto.FailureReason;
-        job.ErrorMessage = dto.ErrorMessage;
-
         job.QueuedAt ??= dto.QueuedAt;
         job.StartedAt ??= dto.StartedAt;
         job.CompletedAt ??= dto.CompletedAt;
@@ -77,6 +63,59 @@ public class CoverJobRepository(ScenematicNpgsqlDataContext context) : ICoverJob
 
         await context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<bool> HasSuccessAsync(Guid id)
+    {
+        var result = await context.GenerateCoverJobSuccessResults.AsNoTracking()
+            .FirstOrDefaultAsync(r => r.JobId == id);
+
+        return result is not null;
+    }
+
+    public async Task<GenerateCoverJobSuccessResult?> SetSuccessAsync(Guid id, SetGenerateCoverJobSuccessDto dto)
+    {
+        var job = await context.GenerateCoverJobs.FirstOrDefaultAsync(j => j.Id == id);
+        if (job is null) return null;
+
+        var result = new GenerateCoverJobSuccessResult()
+        {
+            JobId = id,
+            MainCoverPath = dto.MainCoverPath,
+            DebounceCoverPath = dto.DebounceCoverPath,
+            ProcessingCoverPath = dto.ProcessingCoverPath
+        };
+
+        job.SuccessResult = result;
+
+        await context.SaveChangesAsync();
+        return result;
+    }
+
+    public async Task<bool> HasFailureAsync(Guid id)
+    {
+        var result = await context.GenerateCoverJobFailureResults.AsNoTracking()
+            .FirstOrDefaultAsync(r => r.JobId == id);
+
+        return result is not null;
+    }
+
+    public async Task<GenerateCoverJobFailureResult?> SetFailureAsync(Guid id, SetGenerateCoverJobFailureDto dto)
+    {
+        var job = await context.GenerateCoverJobs.FirstOrDefaultAsync(j => j.Id == id);
+        if (job is null) return null;
+
+        var result = new GenerateCoverJobFailureResult()
+        {
+            JobId = id,
+            FailureReason = dto.FailureReason,
+            ErrorMessage = dto.ErrorMessage
+        };
+
+        job.FailureResult = result;
+
+        await context.SaveChangesAsync();
+        return result;
     }
 
     public async Task<bool> DeleteMetaAsync(Guid id)

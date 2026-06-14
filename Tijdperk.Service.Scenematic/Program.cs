@@ -51,13 +51,24 @@ app.MapPost("generate-cover", async (
 ) =>
 {
     dto ??= new RegisterGenerateCoverDto(
+        CoverGeneratorJobService.GenerateCoverMetaHash(
+            "UNSTOPPABLE",
+            "The Purge, Omnya & Iris Goes",
+            "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg",
+            []
+        ),
         "UNSTOPPABLE",
         "The Purge, Omnya & Iris Goes",
         "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg",
         []
     );
 
-    var hash = CoverJobRepository.GenerateCoverMetaHash(dto);
+    var hash = CoverGeneratorJobService.GenerateCoverMetaHash(
+        dto.AlbumTitle,
+        dto.AlbumArtist,
+        dto.AlbumCoverImageUrl,
+        dto.CoverVotes
+    );
     var existingJobResult = await jobService.GetByMetaHashAsync(hash);
     if (existingJobResult.IsSuccess)
     {
@@ -66,7 +77,8 @@ app.MapPost("generate-cover", async (
             {
                 existingJobResult.Data.Id,
                 existingJobResult.Data.State,
-                existingJobResult.Data.ErrorMessage
+                MetaHash = existingJobResult.Data.CoverMetaHash,
+                // existingJobResult.Data.ErrorMessage
             }
         );
     }

@@ -171,7 +171,27 @@ public class GenerateCoverWorker(
         {
             logger.LogInformation("Cover generation job {JobId} completed successfully", jobId);
 
-            var markResult = await jobService.MarkCompletedAsync(jobId);
+            if (
+                string.IsNullOrEmpty(result.MainCoverPath)
+                || string.IsNullOrEmpty(result.DebounceCoverPath)
+                || string.IsNullOrEmpty(result.ProcessingCoverPath)
+            )
+            {
+                logger.LogError(
+                    "Cover generation job {JobId} completed successfully but result paths are invalid",
+                    jobId
+                );
+
+                // TODO - Handle this case
+            }
+
+            var markResult = await jobService.MarkCompletedAsync(
+                jobId: jobId,
+                mainCoverPath: result.MainCoverPath!,
+                debounceCoverPath: result.DebounceCoverPath!,
+                processingCoverPath: result.ProcessingCoverPath!
+            );
+
             if (markResult.IsError)
             {
                 logger.LogError(

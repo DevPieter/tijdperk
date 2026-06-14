@@ -15,10 +15,8 @@ public class GenerateCoverJob
     [Required]
     public GenerateCoverJobState State { get; set; }
 
-    public GenerateCoverJobFailureReason? FailureReason { get; set; }
-
-    [MaxLength(4000)]
-    public string? ErrorMessage { get; set; }
+    public GenerateCoverJobSuccessResult? SuccessResult { get; set; }
+    public GenerateCoverJobFailureResult? FailureResult { get; set; }
 
     [Required]
     public DateTime CreatedAt { get; init; }

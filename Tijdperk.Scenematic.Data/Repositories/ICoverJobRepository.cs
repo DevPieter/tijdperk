@@ -12,5 +12,11 @@ public interface ICoverJobRepository
 
     Task<bool> UpdateAsync(Guid id, UpdateGenerateCoverDto dto);
 
+    Task<bool> HasSuccessAsync(Guid id);
+    Task<GenerateCoverJobSuccessResult?> SetSuccessAsync(Guid id, SetGenerateCoverJobSuccessDto dto);
+
+    Task<bool> HasFailureAsync(Guid id);
+    Task<GenerateCoverJobFailureResult?> SetFailureAsync(Guid id, SetGenerateCoverJobFailureDto dto);
+
     Task<bool> DeleteMetaAsync(Guid id);
 }
