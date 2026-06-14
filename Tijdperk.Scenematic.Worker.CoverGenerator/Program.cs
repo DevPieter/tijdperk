@@ -44,49 +44,4 @@ builder.Services.AddScoped<CoverProcessor>();
 builder.Services.AddScoped<CoverGeneratorJobService>();
 
 var app = builder.Build();
-
-// app.MapGet("generate", (
-//     Renderer renderer,
-//     IHttpClientFactory httpClientFactory
-// ) =>
-// {
-//     var client = httpClientFactory.CreateClient();
-//     var cover = new CoverSceneRenderer(client);
-//
-//     renderer.Add(new Scene("Cover 0", 0, cover));
-//     renderer.Add(new Scene("Cover 1", 4, cover));
-//     renderer.Add(new Scene("Cover 2", 6, new CoverSceneRenderer(client), 1).AddOverlay(new BrandingOverlay()));
-//
-//     renderer.Initialize();
-//     var image = renderer.Render();
-//
-//     return Results.File(
-//         image,
-//         "image/webp",
-//         $"animation_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.webp"
-//     );
-// });
-
 app.Run();
-
-// using var scope = app.Services.CreateScope();
-// var serviceProvider = scope.ServiceProvider;
-//
-// var coverBucket = serviceProvider.GetRequiredService<ICoverBucket>();
-// var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-//
-// var testResult = await coverBucket.PutObjectAsync(
-//     Guid.NewGuid().ToString(),
-//     "webp",
-//     @"C:\Users\devpi\Desktop\tijdperk\animation_2026-06-07_00-56-55.webp",
-//     "image/webp"
-// );
-//
-// if (testResult.IsSuccess)
-// {
-//     logger.LogInformation("Successfully uploaded test object to MinIO. URL: {Url}", testResult.Data);
-// }
-// else
-// {
-//     logger.LogError("Failed to upload test object to MinIO. Error: {Error}", testResult.Message);
-// }
