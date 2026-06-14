@@ -4,6 +4,7 @@ public enum GenerateCoverJobFailureReason
 {
     None,
     Unknown,
+    NotFound,
     DownloadingFailed,
     RenderingFailed,
     WritingFailed,

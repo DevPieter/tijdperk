@@ -1,13 +1,13 @@
+using MassTransit;
 using Scalar.AspNetCore;
 using Tijdperk.Data.Postgres.Extensions;
-using Tijdperk.Scenematic.Data.Models.DTOs;
 using Tijdperk.Scenematic.Data.Models.DTOs.Covers;
 using Tijdperk.Scenematic.Data.Postgres.Extensions;
-using Tijdperk.Scenematic.Data.Postgres.Repositories;
 using Tijdperk.Scenematic.Logic.Services;
-using Tijdperk.Scenematic.Queue.Queues;
-using Tijdperk.Scenematic.Queue.Redis.Extensions;
-using Tijdperk.Scenematic.Queue.Redis.Options;
+using Tijdperk.Scenematic.Queue;
+using Tijdperk.Scenematic.Queue.Contracts.GenerateCoverJobs;
+using Tijdperk.Scenematic.Queue.RabbitMQ.Extensions;
+using Tijdperk.Scenematic.Queue.RabbitMQ.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,13 +24,19 @@ var scenematicConnectionString = builder.Configuration.GetConnectionString("Scen
 if (string.IsNullOrEmpty(scenematicConnectionString))
     throw new InvalidOperationException("Scenematic Connection string is not configured.");
 
-var scenematicRedisOptions = builder.Configuration.GetSection("Scenematic:Redis").Get<RedisQueueOptions>();
-if (scenematicRedisOptions is null)
-    throw new InvalidOperationException("Scenematic RedisOptions is not configured.");
+var scenematicRabbitMqOptions = builder.Configuration.GetSection("Scenematic:RabbitMq").Get<RabbitMqOptions>();
+if (scenematicRabbitMqOptions is null)
+    throw new InvalidOperationException("Scenematic RabbitMqOptions is not configured.");
 
 builder.Services.UseNpgsqlContext(tijdperkConnectionString);
 builder.Services.UseScenematicNpgsqlContext(scenematicConnectionString);
-builder.Services.UseScenematicRedis(scenematicRedisOptions);
+builder.Services.UseScenematicRabbitMq(
+    scenematicRabbitMqOptions
+    // cfg =>
+    // {
+    //     cfg.AddRequestClient<GenerateCoverJobRequested>();
+    // }
+);
 
 builder.Services.AddScoped<CoverGeneratorJobService>();
 
@@ -46,7 +52,7 @@ app.MapControllers();
 
 app.MapPost("generate-cover", async (
     CoverGeneratorJobService jobService,
-    IGenerateCoverJobQueue queue,
+    ISendEndpointProvider sendEndpointProvider,
     RegisterGenerateCoverDto? inDto
 ) =>
 {
@@ -113,7 +119,9 @@ app.MapPost("generate-cover", async (
     var job = await jobService.RegisterAsync(dto);
 
     await jobService.MarkQueuedAsync(job.Data.Id);
-    await queue.EnqueueAsync(job.Data.Id);
+
+    var endpoint = await sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{ScenematicQueueNames.GenerateCover}"));
+    await endpoint.Send(new GenerateCoverJobRequested(job.Data.Id));
 
     return Results.Accepted(
         $"/generate-cover-jobs/{job.Data.Id}",

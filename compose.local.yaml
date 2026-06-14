@@ -33,13 +33,18 @@ services:
     ports:
       - "5433:5432"
 
-  redis:
-    image: redis:latest
-    container_name: tijdperk-scenematic-redis
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: tijdperk-scenematic-rabbitmq
     restart: unless-stopped
 
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
     ports:
-      - "6379:6379"
+      - "5672:5672"
+      - "15672:15672"
 
   minio:
     image: minio/minio:latest

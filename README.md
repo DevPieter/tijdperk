@@ -20,7 +20,7 @@ Tijdperk is organized into the following projects:
 - Tijdperk.Scenematic.Data.Postgres
 - Tijdperk.Scenematic.Logic
 - Tijdperk.Scenematic.Queue
-- Tijdperk.Scenematic.Queue.Redis
+- Tijdperk.Scenematic.Queue.RabbitMQ
 - Tijdperk.Scenematic.Worker.CoverGenerator
 - Tijdperk.Service.Bot
 - Tijdperk.Service.Scenematic
@@ -36,12 +36,12 @@ Tijdperk is organized into the following projects:
     - -> `Tijdperk.Data.Postgres`
     - -> `Tijdperk.Scenematic.Logic`
     - -> `Tijdperk.Scenematic.Data.Postgres`
-    - -> `Tijdperk.Scenematic.Queue.Redis`
+    - -> `Tijdperk.Scenematic.Queue.RabbitMQ`
 
 - `Tijdperk.Scenematic.Worker.CoverGenerator`
     - -> `Tijdperk.Scenematic.Logic`
     - -> `Tijdperk.Scenematic.Data.Postgres`
-    - -> `Tijdperk.Scenematic.Queue.Redis`
+    - -> `Tijdperk.Scenematic.Queue.RabbitMQ`
     - -> `Tijdperk.Scenematic.Bucket.MinIO`
 
 - `Tijdperk.Logic`
@@ -72,7 +72,7 @@ Tijdperk is organized into the following projects:
     - -> `Tijdperk.Common.Core`
     - -> `Tijdperk.Scenematic.Common`
 
-- `Tijdperk.Scenematic.Queue.Redis`
+- `Tijdperk.Scenematic.Queue.RabbitMQ`
     - -> `Tijdperk.Scenematic.Queue`
 
 - `Tijdperk.Scenematic.Queue`
@@ -83,13 +83,14 @@ Tijdperk is organized into the following projects:
 ### Prerequisites
 
 - .NET 10 SDK ([Download .NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0))
-- Docker Desktop or Docker Engine with Docker Compose ([Getting Started with Docker](https://docs.docker.com/get-started/))
+- Docker Desktop or Docker Engine with Docker
+  Compose ([Getting Started with Docker](https://docs.docker.com/get-started/))
 - Discord Bot Token ([How to obtain a token](#creating-a-discord-bot-and-obtaining-a-token))
 - A guild/server where you have permissions to add the bot
 
 - Local dependencies ([Setting Up Local Dependencies](#setting-up-local-dependencies))
     - **Two** PostgreSQL databases
-    - A Redis instance
+    - A RabbitMQ instance
     - A MinIO instance
 
 ### Configuring App Settings
@@ -98,9 +99,11 @@ Tijdperk is organized into the following projects:
 > Do **NOT** commit your `appsettings.Development.json` file to git, as it **WILL contain sensitive information**.
 
 > [!WARNING]
-> Do **NOT** add sensitive information to `appsettings.json`. Always use `appsettings.Development.json` or environment variables for sensitive data.
+> Do **NOT** add sensitive information to `appsettings.json`. Always use `appsettings.Development.json` or environment
+> variables for sensitive data.
 
-For local development, create `appsettings.Development.json` files in the projects you want to run. Each project has an `appsettings.json` file that you can copy and modify as needed.
+For local development, create `appsettings.Development.json` files in the projects you want to run. Each project has an
+`appsettings.json` file that you can copy and modify as needed.
 
 #### App Settings for `Tijdperk.Service.Bot`
 
@@ -134,13 +137,15 @@ Example:
 
 #### App Settings for `Tijdperk.Service.Scenematic`
 
-| Setting                        | Description                                                        |
-|--------------------------------|--------------------------------------------------------------------|
-| `ConnectionStrings.Tijdperk`   | Main Tijdperk PostgreSQL connection string.                        |
-| `ConnectionStrings.Scenematic` | Scenematic PostgreSQL connection string.                           |
-| `Scenematic.Redis.Host`        | Redis host.                                                        |
-| `Scenematic.Redis.Port`        | Redis port.                                                        |
-| `Scenematic.Redis.Password`    | Redis password. *Use an empty string for the local compose setup.* |
+| Setting                           | Description                                                 |
+|-----------------------------------|-------------------------------------------------------------|
+| `ConnectionStrings.Tijdperk`      | Main Tijdperk PostgreSQL connection string.                 |
+| `ConnectionStrings.Scenematic`    | Scenematic PostgreSQL connection string.                    |
+| `Scenematic.RabbitMq.Host`        | RabbitMQ host.                                              |
+| `Scenematic.RabbitMq.Port`        | RabbitMQ AMQP port.                                         |
+| `Scenematic.RabbitMq.VirtualHost` | RabbitMQ virtual host. Use `/` for the local compose setup. |
+| `Scenematic.RabbitMq.Username`    | RabbitMQ username. Use `guest` for the local compose setup. |
+| `Scenematic.RabbitMq.Password`    | RabbitMQ password. Use `guest` for the local compose setup. |
 
 Example:
 
@@ -151,10 +156,12 @@ Example:
     "Scenematic": "Server=localhost;Port=5433;Database=tijdperk_scenematic;User Id=tijdperk_scenematic;Password=tijdperk_scenematic;"
   },
   "Scenematic": {
-    "Redis": {
+    "RabbitMq": {
       "Host": "localhost",
-      "Port": 6379,
-      "Password": ""
+      "Port": 5672,
+      "VirtualHost": "/",
+      "Username": "guest",
+      "Password": "guest"
     }
   }
 }
@@ -165,9 +172,11 @@ Example:
 | Setting                                      | Description                                                                        |
 |----------------------------------------------|------------------------------------------------------------------------------------|
 | `ConnectionStrings.Scenematic`               | Scenematic PostgreSQL connection string.                                           |
-| `Scenematic.Redis.Host`                      | Redis host.                                                                        |
-| `Scenematic.Redis.Port`                      | Redis port.                                                                        |
-| `Scenematic.Redis.Password`                  | Redis password. *Use an empty string for the local compose setup.*                 |
+| `Scenematic.RabbitMq.Host`                   | RabbitMQ host.                                                                     |
+| `Scenematic.RabbitMq.Port`                   | RabbitMQ AMQP port.                                                                |
+| `Scenematic.RabbitMq.VirtualHost`            | RabbitMQ virtual host. Use `/` for the local compose setup.                        |
+| `Scenematic.RabbitMq.Username`               | RabbitMQ username. Use `guest` for the local compose setup.                        |
+| `Scenematic.RabbitMq.Password`               | RabbitMQ password. Use `guest` for the local compose setup.                        |
 | `Scenematic.MinIO.Endpoint`                  | MinIO endpoint used by the worker.                                                 |
 | `Scenematic.MinIO.AccessKey`                 | MinIO access key.                                                                  |
 | `Scenematic.MinIO.SecretKey`                 | MinIO secret key.                                                                  |
@@ -183,10 +192,12 @@ Example:
     "Scenematic": "Server=localhost;Port=5433;Database=tijdperk_scenematic;User Id=tijdperk_scenematic;Password=tijdperk_scenematic;"
   },
   "Scenematic": {
-    "Redis": {
+    "RabbitMq": {
       "Host": "localhost",
-      "Port": 6379,
-      "Password": ""
+      "Port": 5672,
+      "VirtualHost": "/",
+      "Username": "guest",
+      "Password": "guest"
     },
     "MinIO": {
       "Endpoint": "localhost:9000",
@@ -212,7 +223,7 @@ The local development environment needs:
 
 - PostgreSQL for the main Tijdperk data model
 - PostgreSQL for the Scenematic data model
-- Redis for Scenematic queue jobs
+- RabbitMQ for Scenematic queue jobs and events
 - MinIO for generated cover storage
 
 Start the local dependencies:
@@ -235,21 +246,25 @@ docker compose -f compose.local.yaml down -v
 
 The local connection details are:
 
-| Dependency            | Local address    | Credentials                                                                                   |
-|-----------------------|------------------|-----------------------------------------------------------------------------------------------|
-| Main PostgreSQL       | `localhost:5432` | Database: `tijdperk`, user: `tijdperk`, password: `tijdperk`                                  |
-| Scenematic PostgreSQL | `localhost:5433` | Database: `tijdperk_scenematic`, user: `tijdperk_scenematic`, password: `tijdperk_scenematic` |
-| Redis                 | `localhost:6379` | No password                                                                                   |
-| MinIO API             | `localhost:9000` | Root user: `tijdperk_minio`, root password: `tijdperk_minio_password`                         |
+| Dependency            | Local address     | Credentials                                                                                   |
+|-----------------------|-------------------|-----------------------------------------------------------------------------------------------|
+| Main PostgreSQL       | `localhost:5432`  | Database: `tijdperk`, user: `tijdperk`, password: `tijdperk`                                  |
+| Scenematic PostgreSQL | `localhost:5433`  | Database: `tijdperk_scenematic`, user: `tijdperk_scenematic`, password: `tijdperk_scenematic` |
+| RabbitMQ AMQP         | `localhost:5672`  | Username: `guest`, password: `guest`, virtual host: `/`                                       |
+| RabbitMQ Management   | `localhost:15672` | Username: `guest`, password: `guest`                                                          |
+| MinIO API             | `localhost:9000`  | Root user: `tijdperk_minio`, root password: `tijdperk_minio_password`                         |
+| MinIO Console         | `localhost:9001`  | Root user: `tijdperk_minio`, root password: `tijdperk_minio_password`                         |
 
 ### Setting Up MinIO with the CLI Client
 
 Use the MinIO CLI Client to create the local bucket and configure public read access for generated cover objects.
 
-1. Download the latest Windows MinIO CLI Client from [MinIO Client releases](https://github.com/minio/mc/releases/latest).
+1. Download the latest Windows MinIO CLI Client
+   from [MinIO Client releases](https://github.com/minio/mc/releases/latest).
 2. Download the `mc.windows-[...].exe` file, for example `mc.windows-amd64.RELEASE.2025-08-13T08-35-41Z.exe`.
 3. Rename the downloaded file to `mc.exe`.
-4. You can either add the folder containing `mc.exe` to your system `PATH` or run it directly from the download location.
+4. You can either add the folder containing `mc.exe` to your system `PATH` or run it directly from the download
+   location.
 
 Check that the client works:
 
@@ -307,7 +322,8 @@ Create an access key for the application:
 mc admin accesskey create tijdperk-local/ --expiry-duration 0
 ```
 
-The command prints an `Access Key` and `Secret Key`. Use those values in `Tijdperk.Scenematic.Worker.CoverGenerator/appsettings.Development.json`:
+The command prints an `Access Key` and `Secret Key`. Use those values in
+`Tijdperk.Scenematic.Worker.CoverGenerator/appsettings.Development.json`:
 
 ```json
 {
