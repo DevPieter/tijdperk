@@ -87,15 +87,8 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
                     b.Property<DateTime?>("FailedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("FailureReason")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("QueuedAt")
                         .HasColumnType("timestamp with time zone");
@@ -112,6 +105,45 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
                         .IsUnique();
 
                     b.ToTable("GenerateCoverJobs");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobFailureResult", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("FailureReason")
+                        .HasColumnType("integer");
+
+                    b.HasKey("JobId");
+
+                    b.ToTable("GenerateCoverJobFailureResults");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobSuccessResult", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DebounceCoverPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MainCoverPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProcessingCoverPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("JobId");
+
+                    b.ToTable("GenerateCoverJobSuccessResults");
                 });
 
             modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverVoteMeta", b =>
@@ -134,9 +166,34 @@ namespace Tijdperk.Scenematic.Data.Postgres.Migrations
                     b.Navigation("CoverMeta");
                 });
 
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobFailureResult", b =>
+                {
+                    b.HasOne("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", null)
+                        .WithOne("FailureResult")
+                        .HasForeignKey("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobFailureResult", "JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobSuccessResult", b =>
+                {
+                    b.HasOne("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", null)
+                        .WithOne("SuccessResult")
+                        .HasForeignKey("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJobSuccessResult", "JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.CoverMeta", b =>
                 {
                     b.Navigation("CoverVotes");
+                });
+
+            modelBuilder.Entity("Tijdperk.Scenematic.Data.Models.Entities.Covers.GenerateCoverJob", b =>
+                {
+                    b.Navigation("FailureResult");
+
+                    b.Navigation("SuccessResult");
                 });
 #pragma warning restore 612, 618
         }

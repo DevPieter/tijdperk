@@ -7,8 +7,17 @@ public interface ICoverJobRepository
 {
     Task<GenerateCoverJob> RegisterAsync(RegisterGenerateCoverDto dto);
 
-    Task<GenerateCoverJob?> GetByIdAsync(Guid id);
-    Task<GenerateCoverJob?> GetByMetaHashAsync(string metaHash);
+    Task<GenerateCoverJob?> GetByIdAsync(
+        Guid id,
+        bool includeMetadata = false,
+        bool includeResults = false
+    );
+
+    Task<GenerateCoverJob?> GetByMetaHashAsync(
+        string metaHash,
+        bool includeMetadata = false,
+        bool includeResults = false
+    );
 
     Task<bool> UpdateAsync(Guid id, UpdateGenerateCoverDto dto);
 

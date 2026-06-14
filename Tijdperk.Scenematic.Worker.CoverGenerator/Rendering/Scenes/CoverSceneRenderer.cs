@@ -1,71 +1,13 @@
 ﻿using SkiaSharp;
 using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Common.Core.Extensions;
+using Tijdperk.Scenematic.Data.Models.DTOs.Covers;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
 
 namespace Tijdperk.Scenematic.Worker.CoverGenerator.Rendering.Scenes;
 
 public class CoverSceneRenderer : ISceneRenderer
 {
-    // private const string Cover = "https://m.media-amazon.com/images/I/418gVUgjzCL.jpg";
-    // private const string Author = "Sefa";
-    // private const string Title = "Het Ergste Moet Nog Komen";
-
-    public const string Cover = "https://m.media-amazon.com/images/I/41lt1U7w-gL._AA500.jpg";
-    public const string Author = "Juno";
-    public const string Title = "Denial";
-
-    // public const string Cover = "https://m.media-amazon.com/images/I/61+RX9gxRcL.jpg";
-    // public const string Author = "bodyimage, SmrtDeath";
-    // public const string Title = "break my fucking sp*ne";
-
-    // public const string Cover = "https://m.media-amazon.com/images/I/513-ufW8Q0L._AA500.jpg";
-    // public const string Author = "wishlane";
-    // public const string Title = "DEAD MAN WALKING";
-
-    // public const string Cover = "https://content-images.p-cdn.com/images/f3/9f/3e/85/4d6b477a9ba1ff088d2f458a/_500W_500H.jpg";
-    // public const string Author = "Crypton";
-    // public const string Title = "GOOD VIBES";
-
-    public static List<SongVoteHolder> Votes =
-    [
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/360790692949393410/29ee2a707b057b873f87f478d97aa488.webp?size=128"),
-
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/724694495395840030/75946b85a5775694131c2c128979bbb7.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/1117754055104671795/a6aa9b2547fe92dd482064c66a918518.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/360790692949393410/29ee2a707b057b873f87f478d97aa488.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/699322765114867764/937caec5a8c6eb66bcef18cddd4a2be5.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/1117754055104671795/a6aa9b2547fe92dd482064c66a918518.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/724694495395840030/75946b85a5775694131c2c128979bbb7.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/427388881214898177/afe3572773a32e161b177e61eebf5abc.webp?size=128"),
-        new(SongVoteLevel.Love,
-            "https://cdn.discordapp.com/avatars/360790692949393410/29ee2a707b057b873f87f478d97aa488.webp?size=128"),
-
-        new(SongVoteLevel.Like,
-            "https://cdn.discordapp.com/avatars/699322765114867764/937caec5a8c6eb66bcef18cddd4a2be5.webp?size=128"),
-        new(SongVoteLevel.Like,
-            "https://cdn.discordapp.com/avatars/1117754055104671795/a6aa9b2547fe92dd482064c66a918518.webp?size=128"),
-
-        new(SongVoteLevel.Like,
-            "https://cdn.discordapp.com/avatars/724694495395840030/75946b85a5775694131c2c128979bbb7.webp?size=128"),
-        new(SongVoteLevel.Neutral,
-            "https://cdn.discordapp.com/avatars/1117754055104671795/a6aa9b2547fe92dd482064c66a918518.webp?size=128"),
-        new(SongVoteLevel.Trash,
-            "https://cdn.discordapp.com/avatars/699322765114867764/937caec5a8c6eb66bcef18cddd4a2be5.webp?size=128"),
-    ];
-
     private const int CoverSize = 300;
     private const int Padding = 32;
 
@@ -87,7 +29,9 @@ public class CoverSceneRenderer : ISceneRenderer
         SongVoteLevel.Trash
     ];
 
-    private readonly HttpClient _client;
+    private readonly string _title;
+    private readonly string _author;
+    private readonly List<GenerateCoverVoteDto> _votes;
 
     private readonly SKSamplingOptions _samplingOptions;
 
@@ -109,7 +53,7 @@ public class CoverSceneRenderer : ISceneRenderer
     private SKSurface? _surface;
     private SKRect? _backgroundRect;
 
-    private SKImage? _coverImage;
+    private readonly SKImage? _coverImage;
     private SKRect? _coverRect;
     private SKPath? _coverPath;
 
@@ -121,11 +65,23 @@ public class CoverSceneRenderer : ISceneRenderer
     private float _authorLineHeight;
     private float _totalTextHeight;
 
-    private readonly Dictionary<string, SKImage> _avatarImages = [];
+    private readonly Dictionary<string, SKImage> _avatarImages;
 
-    public CoverSceneRenderer(HttpClient client)
+    public CoverSceneRenderer(
+        string title,
+        string author,
+        List<GenerateCoverVoteDto> votes,
+        SKImage coverImage,
+        Dictionary<string, SKImage> avatarImages
+    )
     {
-        _client = client;
+        _title = title;
+        _author = author;
+        _votes = votes;
+
+        _coverImage = coverImage;
+        _avatarImages = avatarImages;
+
         _samplingOptions = new SKSamplingOptions(SKCubicResampler.Mitchell);
 
         using var titleTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
@@ -172,8 +128,8 @@ public class CoverSceneRenderer : ISceneRenderer
     public void Initialize(InitContext context)
     {
         _surface = SKSurface.Create(new SKImageInfo(context.Width, context.Height));
-        _coverImage = TryDownloadImage(_client, Cover).GetAwaiter().GetResult() ??
-                      SKImage.Create(new SKImageInfo(CoverSize, CoverSize));
+        // _coverImage = TryDownloadImage(_client, Cover).GetAwaiter().GetResult() ??
+        // SKImage.Create(new SKImageInfo(CoverSize, CoverSize));
 
         _backgroundRect = CoverRect(
             _coverImage.Width,
@@ -199,26 +155,17 @@ public class CoverSceneRenderer : ISceneRenderer
             _coverRect!.Value.Bottom
         );
 
-        _titleLines = WrapText(Title, _titleFont, _textRect.Value.Width, 2);
-        _authorLines = WrapText(Author, _authorFont, _textRect.Value.Width, 1);
+        _titleLines = WrapText(_title, _titleFont, _textRect.Value.Width, 2);
+        _authorLines = WrapText(_author, _authorFont, _textRect.Value.Width, 1);
 
         _titleLineHeight = _titleFont.Size * 1.15f;
         _authorLineHeight = _authorFont.Size * 1.2f;
         _totalTextHeight = _titleLines.Count * _titleLineHeight + 12 + _authorLines.Count * _authorLineHeight;
-
-        foreach (var vote in Votes)
-        {
-            if (_avatarImages.ContainsKey(vote.AvatarUrl)) continue;
-
-            var avatarImage = TryDownloadImage(_client, vote.AvatarUrl).GetAwaiter().GetResult();
-            if (avatarImage is not null) _avatarImages[vote.AvatarUrl] = avatarImage;
-        }
     }
 
     public void Dispose()
     {
         _surface?.Dispose();
-        _coverImage?.Dispose();
         _titleFont.Dispose();
         _titlePaint.Dispose();
         _authorFont.Dispose();
@@ -229,13 +176,6 @@ public class CoverSceneRenderer : ISceneRenderer
         _voteLabelFont.Dispose();
         _voteLabelPaint.Dispose();
         _voteMutedPaint.Dispose();
-
-        foreach (var avatarImage in _avatarImages.Values)
-        {
-            avatarImage.Dispose();
-        }
-
-        _avatarImages.Clear();
     }
 
     public byte[] Render(RenderContext context)
@@ -305,7 +245,7 @@ public class CoverSceneRenderer : ISceneRenderer
 
         var segmentWidth = railRect.Width / VoteLevels.Length;
 
-        var votes = Votes.Select(v => v.Level).ToList();
+        var votes = _votes.Select(v => v.VoteLevel).ToList();
         var winningLevel = votes.CalculateLevel();
 
         var winningProgress = EaseOutCubic(Math.Clamp(progress * 1.6f, 0f, 1f));
@@ -362,7 +302,7 @@ public class CoverSceneRenderer : ISceneRenderer
         {
             var level = VoteLevels[levelIndex];
 
-            var votes = Votes.Where(v => v.Level == level).ToList();
+            var votes = _votes.Where(v => v.VoteLevel == level).ToList();
             if (votes.Count == 0) continue;
 
             var visibleVotes = votes.Take(maxVisible).ToList();
@@ -428,7 +368,7 @@ public class CoverSceneRenderer : ISceneRenderer
 
     private void DrawAvatarChip(
         SKCanvas canvas,
-        SongVoteHolder vote,
+        GenerateCoverVoteDto vote,
         SKPoint center,
         float size,
         SKColor levelColor,

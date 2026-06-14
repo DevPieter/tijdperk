@@ -41,13 +41,51 @@ public class CoverJobRepository(ScenematicNpgsqlDataContext context) : ICoverJob
         return job;
     }
 
-    public async Task<GenerateCoverJob?> GetByIdAsync(Guid id) => await context.GenerateCoverJobs
-        .AsNoTracking()
-        .FirstOrDefaultAsync(j => j.Id == id);
+    public async Task<GenerateCoverJob?> GetByIdAsync(
+        Guid id,
+        bool includeMetadata = false,
+        bool includeResults = false
+    )
+    {
+        var query = context.GenerateCoverJobs.AsNoTracking();
 
-    public async Task<GenerateCoverJob?> GetByMetaHashAsync(string metaHash) => await context.GenerateCoverJobs
-        .AsNoTracking()
-        .FirstOrDefaultAsync(j => j.CoverMetaHash == metaHash);
+        if (includeMetadata)
+        {
+            query = query.Include(j => j.CoverMeta)
+                .ThenInclude(m => m.CoverVotes);
+        }
+
+        if (includeResults)
+        {
+            query = query.Include(j => j.SuccessResult)
+                .Include(j => j.FailureResult);
+        }
+
+        return await query.FirstOrDefaultAsync(j => j.Id == id);
+    }
+
+    public async Task<GenerateCoverJob?> GetByMetaHashAsync(
+        string metaHash,
+        bool includeMetadata = false,
+        bool includeResults = false
+    )
+    {
+        var query = context.GenerateCoverJobs.AsNoTracking();
+
+        if (includeMetadata)
+        {
+            query = query.Include(j => j.CoverMeta)
+                .ThenInclude(m => m.CoverVotes);
+        }
+
+        if (includeResults)
+        {
+            query = query.Include(j => j.SuccessResult)
+                .Include(j => j.FailureResult);
+        }
+
+        return await query.FirstOrDefaultAsync(j => j.CoverMetaHash == metaHash);
+    }
 
     public async Task<bool> UpdateAsync(Guid id, UpdateGenerateCoverDto dto)
     {

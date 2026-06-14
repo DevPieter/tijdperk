@@ -47,21 +47,26 @@ app.MapControllers();
 app.MapPost("generate-cover", async (
     CoverGeneratorJobService jobService,
     IGenerateCoverJobQueue queue,
-    RegisterGenerateCoverDto? dto
+    RegisterGenerateCoverDto? inDto
 ) =>
 {
-    dto ??= new RegisterGenerateCoverDto(
-        CoverGeneratorJobService.GenerateCoverMetaHash(
-            "UNSTOPPABLE",
-            "The Purge, Omnya & Iris Goes",
-            "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg",
-            []
-        ),
+    inDto ??= new RegisterGenerateCoverDto(
+        "",
         "UNSTOPPABLE",
         "The Purge, Omnya & Iris Goes",
         "https://m.media-amazon.com/images/I/51AmP27pHNL._AA500.jpg",
         []
     );
+
+    var dto = inDto with
+    {
+        MetaHash = CoverGeneratorJobService.GenerateCoverMetaHash(
+            inDto.AlbumTitle,
+            inDto.AlbumArtist,
+            inDto.AlbumCoverImageUrl,
+            inDto.CoverVotes
+        )
+    };
 
     var hash = CoverGeneratorJobService.GenerateCoverMetaHash(
         dto.AlbumTitle,
@@ -69,16 +74,38 @@ app.MapPost("generate-cover", async (
         dto.AlbumCoverImageUrl,
         dto.CoverVotes
     );
-    var existingJobResult = await jobService.GetByMetaHashAsync(hash);
+    var existingJobResult = await jobService.GetByMetaHashAsync(hash, includeResults: true);
     if (existingJobResult.IsSuccess)
     {
-        return Results.Ok(
-            new
+        var existingJob = existingJobResult.Data;
+        if (existingJob is null) return Results.Problem("Failed to retrieve existing job");
+
+        var successResult = existingJob?.SuccessResult;
+        var failureResult = existingJob?.FailureResult;
+
+        return Results.Ok(new
             {
-                existingJobResult.Data.Id,
-                existingJobResult.Data.State,
-                MetaHash = existingJobResult.Data.CoverMetaHash,
-                // existingJobResult.Data.ErrorMessage
+                existingJob.Id,
+                existingJob.State,
+                MetaHash = existingJob.CoverMetaHash,
+
+                SuccessResult = successResult is null
+                    ? null
+                    : new
+                    {
+                        successResult.MainCoverPath,
+                        successResult.DebounceCoverPath,
+                        successResult.ProcessingCoverPath,
+                        existingJob.CompletedAt
+                    },
+
+                FailureResult = failureResult is null
+                    ? null
+                    : new
+                    {
+                        failureResult.ErrorMessage,
+                        existingJob.FailedAt
+                    }
             }
         );
     }
@@ -90,7 +117,12 @@ app.MapPost("generate-cover", async (
 
     return Results.Accepted(
         $"/generate-cover-jobs/{job.Data.Id}",
-        new { job.Data.Id }
+        new
+        {
+            job.Data.Id,
+            job.Data.State,
+            MetaHash = job.Data.CoverMetaHash
+        }
     );
 });
 

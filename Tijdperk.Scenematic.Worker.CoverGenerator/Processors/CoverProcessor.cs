@@ -1,4 +1,6 @@
 using System.Text.Json;
+using SkiaSharp;
+using Tijdperk.Common.Core.Enums.Songs;
 using Tijdperk.Scenematic.Bucket.Buckets;
 using Tijdperk.Scenematic.Bucket.Models.Covers;
 using Tijdperk.Scenematic.Common.Enums;
@@ -20,9 +22,26 @@ public class CoverProcessor(
     private const int Width = 1200;
     private const int Height = 450;
 
+    private static async Task<SKImage?> TryDownloadImage(HttpClient client, string url)
+    {
+        try
+        {
+            var bytes = await client.GetByteArrayAsync(url);
+            return SKImage.FromEncodedData(bytes);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<ProcessCoverResult> ProcessAsync(ProcessCoverArgs args, CancellationToken cancellationToken)
     {
         var workDirPath = CreateFreshWorkDir(args.JobId);
+
+        string bucketMainCoverPath;
+        string bucketDebounceCoverPath;
+        string bucketProcessingCoverPath;
 
         var lockFileCreated = CreateFreshLockFile(args.JobId);
         if (!lockFileCreated)
@@ -40,16 +59,50 @@ public class CoverProcessor(
 
         UpdateLockFileStage(args.JobId, ProcessCoverStage.Initializing);
 
-        string bucketMainCoverPath;
-        string bucketDebounceCoverPath;
-        string bucketProcessingCoverPath;
+        var coverImage = await TryDownloadImage(client, args.AlbumCoverImageUrl);
+        if (coverImage is null)
+        {
+            logger.LogError(
+                "Failed to download cover image for job {JobId} from URL {CoverUrl}. Aborting processing.",
+                args.JobId,
+                args.AlbumCoverImageUrl
+            );
+
+            UpdateLockFileStage(
+                args.JobId,
+                ProcessCoverStage.Failed,
+                "Failed to download cover image."
+            );
+
+            return ProcessCoverResult.Failure(
+                GenerateCoverJobFailureReason.DownloadingFailed,
+                "Failed to download cover image."
+            );
+        }
+
+        var avatarImages = new Dictionary<string, SKImage>();
+
+        foreach (var vote in args.CoverVotes)
+        {
+            if (avatarImages.ContainsKey(vote.AvatarUrl)) continue;
+
+            var avatarImage = await TryDownloadImage(client, vote.AvatarUrl);
+            if (avatarImage is not null) avatarImages[vote.AvatarUrl] = avatarImage;
+        }
 
         try
         {
             var renderMainCoverTask = new Task<byte[]>(() =>
             {
                 using var renderer = new Renderer(Fps, Width, Height);
-                var cover = new CoverSceneRenderer(client /*, TODO - Specify type*/);
+                var cover = new CoverSceneRenderer(
+                    args.AlbumTitle,
+                    args.AlbumArtist,
+                    args.CoverVotes,
+                    coverImage,
+                    avatarImages
+                    /*, TODO - Specify type*/
+                );
 
                 renderer.Add(
                     new Scene(
@@ -65,7 +118,7 @@ public class CoverProcessor(
                     new Scene(
                         "Main Cover",
                         6,
-                        new CoverSceneRenderer(client),
+                        cover,
                         1
                     ).AddOverlay(new BrandingOverlay())
                 );
@@ -77,7 +130,14 @@ public class CoverProcessor(
             var renderDebounceCoverTask = new Task<byte[]>(() =>
             {
                 using var renderer = new Renderer(Fps, Width, Height);
-                var cover = new CoverSceneRenderer(client /*, TODO - Specify type*/);
+                var cover = new CoverSceneRenderer(
+                    args.AlbumTitle,
+                    args.AlbumArtist,
+                    args.CoverVotes,
+                    coverImage,
+                    avatarImages
+                    /*, TODO - Specify type*/
+                );
 
                 renderer.Add(
                     new Scene(
@@ -99,7 +159,14 @@ public class CoverProcessor(
             var renderProcessingCoverTask = new Task<byte[]>(() =>
             {
                 using var renderer = new Renderer(Fps, Width, Height);
-                var cover = new CoverSceneRenderer(client /*, TODO - Specify type*/);
+                var cover = new CoverSceneRenderer(
+                    args.AlbumTitle,
+                    args.AlbumArtist,
+                    args.CoverVotes,
+                    coverImage,
+                    avatarImages
+                    /*, TODO - Specify type*/
+                );
 
                 renderer.Add(
                     new Scene(
@@ -131,6 +198,9 @@ public class CoverProcessor(
                     renderDebounceCoverTask,
                     renderProcessingCoverTask
                 );
+
+                coverImage.Dispose();
+                foreach (var avatarImage in avatarImages.Values) avatarImage.Dispose();
             }
             catch (Exception ex)
             {

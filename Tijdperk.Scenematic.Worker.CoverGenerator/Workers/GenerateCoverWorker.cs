@@ -1,6 +1,7 @@
 ﻿using Tijdperk.Common.Core.Enums.Common;
 using Tijdperk.Common.Core.Models.Common;
 using Tijdperk.Scenematic.Common.Enums;
+using Tijdperk.Scenematic.Data.Models.DTOs.Covers;
 using Tijdperk.Scenematic.Logic.Services;
 using Tijdperk.Scenematic.Queue.Queues;
 using Tijdperk.Scenematic.Worker.CoverGenerator.Models;
@@ -100,7 +101,7 @@ public class GenerateCoverWorker(
         CancellationToken cancellationToken
     )
     {
-        var jobResult = await jobService.GetByIdAsync(jobId);
+        var jobResult = await jobService.GetByIdAsync(jobId, includeMetadata: true);
 
         if (jobResult.Type == ResultType.NotFound)
         {
@@ -125,7 +126,7 @@ public class GenerateCoverWorker(
         }
 
         var job = jobResult.Data;
-        if (job is null)
+        if (job?.CoverMeta is null)
         {
             logger.LogError(
                 "Cover generation job {JobId} returned success but data is null",
@@ -160,9 +161,16 @@ public class GenerateCoverWorker(
             return;
         }
 
-        // TODO - Give correct params with meta and stuff
         var result = await processor.ProcessAsync(new ProcessCoverArgs(
-                jobId
+                jobId,
+                job.CoverMetaHash,
+                job.CoverMeta.AlbumTitle,
+                job.CoverMeta.AlbumArtist,
+                job.CoverMeta.AlbumCoverImageUrl,
+                job.CoverMeta.CoverVotes.Select(cv => new GenerateCoverVoteDto(
+                    cv.VoteLevel,
+                    cv.AvatarUrl
+                )).ToList()
             ),
             cancellationToken
         );
