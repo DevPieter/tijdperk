@@ -5,15 +5,17 @@ namespace Tijdperk.Service.Bot.Interactions.Commands;
 
 public class NewEmbedCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    public const string Cover =
-        "https://cdn.discordapp.com/attachments/1501197469453779094/1512794301212393603/zv19j8h.webp?ex=6a2562fb&is=6a24117b&hm=3d10fe288c739fee5316ae5bdf6128e825c4133e0d8e21e4d37060160020e138&";
+    private const string Cover =
+        // "https://cdn.discordapp.com/attachments/1501197469453779094/1512794301212393603/zv19j8h.webp?ex=6a2562fb&is=6a24117b&hm=3d10fe288c739fee5316ae5bdf6128e825c4133e0d8e21e4d37060160020e138&";
+        "https://cdn.pietr.space/tijdperk/cover/019f03c2-ccb5-7f37-9815-f2ebb8986aa9/cover-ec57fa34-1fed-4f50-989d-6e2c2cc954f3.webp";
     // "https://cdn.discordapp.com/attachments/1501197469453779094/1512794282161999882/nj8tm2t.webp?ex=6a2562f7&is=6a241177&hm=66d3890814a4ff8deded4c3369ad94bd049e975972ad524905fdc96cc0b35265&";
 
-    public const string SpotifyUrl = "https://open.spotify.com/track/74m5d3fJygq03OXGXLdyXO";
-    public const string YoutubeUrl = "https://pietr.space";
-    public const string AppleMusicUrl = "https://pietr.space";
-    public const string Author = "Crypton";
-    public const string Title = "GOOD VIBES";
+    private const string SpotifyUrl = "https://open.spotify.com/track/74m5d3fJygq03OXGXLdyXO";
+    private const string YoutubeUrl = "https://pietr.space";
+    private const string AppleMusicUrl = "https://pietr.space";
+    private const string SoundcloudUrl = "https://pietr.space";
+    private const string Author = "Self Aware";
+    private const string Title = "Jiyagi";
 
     [SlashCommand("test", "Test the new song message format")]
     public async Task SendSongMessage(string? comment = null)
@@ -21,8 +23,9 @@ public class NewEmbedCommand : InteractionModuleBase<SocketInteractionContext>
         var builder = new ComponentBuilderV2();
 
         builder.WithSeparator(new SeparatorBuilder(false));
-        builder.WithTextDisplay("**:thumbsup: Liked**");
-        builder.WithTextDisplay("-# `10 🔥` | `3 👍` | `1 😐` | `0 👎` | `1 💩`");
+        // builder.WithTextDisplay("**:thumbsup: Liked**");
+        builder.WithTextDisplay("**:rolling_eyes: No votes yet**");
+        builder.WithTextDisplay("-# `0 🔥` | `0 👍` | `0 😐` | `0 👎` | `0 💩`");
         builder.WithSeparator(new SeparatorBuilder(false));
         builder.WithTextDisplay($"## **[{Author} - {Title}]({SpotifyUrl})**");
 
@@ -57,6 +60,12 @@ public class NewEmbedCommand : InteractionModuleBase<SocketInteractionContext>
                 style: ButtonStyle.Link,
                 url: AppleMusicUrl,
                 emote: new Emote(1512866932259553400, "apple"))
+            )
+            .WithButton(new ButtonBuilder(
+                "SoundCloud",
+                style: ButtonStyle.Link,
+                url: SoundcloudUrl,
+                emote: new Emote(1521433698275164242, "soundcloud"))
             )
         );
 
