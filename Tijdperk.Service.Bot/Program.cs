@@ -6,6 +6,7 @@ using Tijdperk.Logic.Services;
 using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot;
 using Tijdperk.Service.Bot.Options;
+using Tijdperk.Service.Bot.Options.Guild;
 using Tijdperk.Service.Bot.Services;
 using Tijdperk.Service.Bot.Services.Interfaces;
 

@@ -10,6 +10,7 @@ using Tijdperk.Logic.Services.Interfaces;
 using Tijdperk.Service.Bot.Constants;
 using Tijdperk.Service.Bot.Extensions;
 using Tijdperk.Service.Bot.Options;
+using Tijdperk.Service.Bot.Options.Guild;
 using Tijdperk.Service.Bot.Services.Interfaces;
 using Tijdperk.Service.Bot.Utils;
 
