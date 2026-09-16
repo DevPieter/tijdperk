@@ -19,6 +19,23 @@ public class NewEmbedCommand(ScenematicService scenematicService) : InteractionM
     private const string Author = "Self Aware";
     private const string Title = "Jiyagi";
 
+    private readonly List<string> _coverGeneratingMessages =
+    [
+        "Generating a beautiful cover",
+        "Creating some amazing artwork",
+        "Rendering a stunning cover",
+        "A cover is being generated",
+        "Sit back and relax while we generate a cover"
+    ];
+
+    private readonly List<string> _waitingForVotesMessages =
+    [
+        "Waiting for more votes",
+        "Procrastinating for more votes",
+        "Waiting for the people to vote",
+        "The moment of truth is coming, waiting for votes"
+    ];
+
     [SlashCommand("generate", "Test generate functionality")]
     public async Task Generate(
         [Summary("title", "The title of the cover to generate")]
@@ -39,8 +56,14 @@ public class NewEmbedCommand(ScenematicService scenematicService) : InteractionM
         builder.WithTextDisplay($"## **[{Author} - {Title}]({SpotifyUrl})**");
 
         builder.WithMediaGallery(new MediaGalleryBuilder()
-            .AddItem(new MediaGalleryItemProperties("https://placehold.jp/3d4070/ffffff/1200x450.png?text=Generating"))
+            .AddItem(new MediaGalleryItemProperties("https://placehold.jp/3d4070/ffffff/1200x450.png?text=Cover"))
         );
+        
+        builder.WithMediaGallery(new MediaGalleryBuilder()
+            .AddItem(new MediaGalleryItemProperties("https://placehold.jp/3d4070/ffffff/1200x200.png?text=Votes"))
+        );
+
+        builder.WithTextDisplay($"-# *Cover is being generated...*");
 
         builder.WithContainer(new ActionRowBuilder()
             .WithButton(new ButtonBuilder("Preview", "testing_embed", ButtonStyle.Success))
@@ -117,9 +140,22 @@ public class NewEmbedCommand(ScenematicService scenematicService) : InteractionM
         builder.WithSeparator(new SeparatorBuilder(false));
         builder.WithTextDisplay($"## **[{Author} - {Title}]({SpotifyUrl})**");
 
+        // builder.WithMediaGallery(new MediaGalleryBuilder()
+        //     .AddItem(new MediaGalleryItemProperties(Cover))
+        // );
+
+        
         builder.WithMediaGallery(new MediaGalleryBuilder()
-            .AddItem(new MediaGalleryItemProperties(Cover))
+            // .AddItem(new MediaGalleryItemProperties("https://placehold.jp/3d4070/ffffff/1200x450.png?text=Cover"))
+            .AddItem(new MediaGalleryItemProperties("https://cdn.pietr.space/tijdperk/cover/cover.webp"))
         );
+        
+        builder.WithMediaGallery(new MediaGalleryBuilder()
+            // .AddItem(new MediaGalleryItemProperties("https://placehold.jp/3d4070/ffffff/1200x200.png?text=Votes"))
+            .AddItem(new MediaGalleryItemProperties("https://cdn.pietr.space/tijdperk/cover/votes.webp"))
+        );
+        
+        // builder.WithTextDisplay($"-# *Waiting for more votes...*");
 
         if (!string.IsNullOrWhiteSpace(comment))
             builder.WithTextDisplay($"```{comment}```");
